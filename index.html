@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>💖 Girls Fit 💖</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header style="position:relative;">
+  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
+  <div class="dropdown-menu" id="dropdownMenu">
+    <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+      <span class="google-icon">G</span> Continue with Google
+    </a>
+  </div>
+  <h1>💖 Girls Fit 💖</h1>
+  <nav id="navBar">
+    <a href="index.html" class="active">Home</a>
+    <a href="handbags.html">Handbags</a>
+    <a href="pouches.html">Makeup Pouches</a>
+    <a href="returns.html">Returns & Refunds</a>
+    <a href="orders.html">My Orders</a>
+    <a href="cart.html">🛒 Cart</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h2>Welcome to Girls Fit!</h2>
+  <p>Your one-stop shop for trendy handbags & makeup pouches 💕</p>
+</section>
+
+<section class="products">
+  <h2>✨ Featured Products ✨</h2>
+  <div class="product-grid" id="featuredProducts">
+  </div>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
+<script type="module">
+  import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
+
+  // Update nav based on auth state
+  function updateNav(user) {
+    const navBar = document.getElementById('navBar');
+    if (user) {
+      const logoutLink = user.email === 'm.abbas.askri@gmail.com' ?
+        '<a href="admin.html">👩‍💼 Admin</a>' :
+        '<a href="orders.html">My Orders</a>';
+      navBar.innerHTML = `
+        <a href="index.html" class="active">Home</a>
+        <a href="handbags.html">Handbags</a>
+        <a href="pouches.html">Makeup Pouches</a>
+        <a href="returns.html">Returns & Refunds</a>
+        ${logoutLink}
+        <a href="cart.html">🛒 Cart</a>
+        <a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (${user.email})</a>
+      `;
+    }
+  }
+
+  function updateProfileIcon(user) {
+    const icon = document.getElementById('profileIcon');
+    const dropdown = document.getElementById('dropdownMenu');
+    if (user) {
+      icon.innerText = '👤';
+      icon.title = user.email;
+      dropdown.innerHTML = `
+        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
+          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
+        </a>
+        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
+      `;
+    } else {
+      icon.innerText = '👤';
+      icon.title = 'Sign In';
+      dropdown.innerHTML = `
+        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
+        </a>
+      `;
+    }
+  }
+
+  window.toggleDropdown = function() {
+    const dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+      const dropdowns = document.getElementsByClassName('dropdown-menu');
+      for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].classList.remove('show');
+      }
+    }
+  }
+
+  window.signInWithGoogle = function() {
+    // Google Sign-In will be implemented with Firebase
+    // Redirect to login page for now
+    window.location.href = 'login.html';
+  };
+
+  window.logoutUser = function() {
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+  };
+
+  // Load featured products
+  function loadFeaturedProducts() {
+    const products = getProducts().filter(p => p.featured);
+    const container = document.getElementById('featuredProducts');
+    container.innerHTML = '';
+    products.forEach(p => {
+      container.innerHTML += `
+        <div class="product-card">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}">` : ''}
+          <h3>${p.name}</h3><p>₨${p.price}</p>
+          <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+        </div>`;
+    });
+  }
+
+  window.addToCart = function(name, price) {
+    const user = window.currentFirebaseUser;
+    if (!user) {
+      alert("Please login to add items to cart!");
+      window.location.href = "login.html";
+      return;
+    }
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.push({ name, price });
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert("💖 " + name + " added to cart!");
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    window.currentFirebaseUser = user;
+    updateProfileIcon(user);
+    if (user) {
+      updateNav(user);
+      loadFeaturedProducts();
+    } else {
+      window.location.href = "login.html";
+    }
+  });
+</script>
+
+</body>
+</html>

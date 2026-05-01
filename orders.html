@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>📦 My Orders - Girls Fit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header style="position:relative;">
+  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
+  <div class="dropdown-menu" id="dropdownMenu">
+    <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+      <span class="google-icon">G</span> Continue with Google
+    </a>
+  </div>
+  <h1>💖 Girls Fit 💖</h1>
+  <nav id="navBar">
+    <a href="index.html">Home</a>
+    <a href="handbags.html">Handbags</a>
+    <a href="pouches.html">Makeup Pouches</a>
+    <a href="returns.html">Returns & Refunds</a>
+    <a href="orders.html" class="active">My Orders</a>
+    <a href="cart.html">🛒 Cart</a>
+  </nav>
+</header>
+
+<section class="orders">
+  <h2>📦 My Order History</h2>
+  <div id="ordersContainer"></div>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
+<script type="module">
+  import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
+
+  function updateNav(user) {
+    const navBar = document.getElementById('navBar');
+    if (user) {
+      const ordersLink = user.email === 'm.abbas.askri@gmail.com' ?
+        '<a href="admin.html">👩‍💼 Admin</a>' :
+        '<a href="orders.html" class="active">My Orders</a>';
+      navBar.innerHTML = `
+        <a href="index.html">Home</a>
+        <a href="handbags.html">Handbags</a>
+        <a href="pouches.html">Makeup Pouches</a>
+        <a href="returns.html">Returns & Refunds</a>
+        ${ordersLink}
+        <a href="cart.html">🛒 Cart</a>
+        <a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (${user.email})</a>
+      `;
+    }
+  }
+
+  window.logoutUser = function() {
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+  };
+
+  function loadUserOrders(user) {
+    const orders = getOrders().filter(o => o.customerEmail === user.email);
+    const container = document.getElementById('ordersContainer');
+
+    if (orders.length === 0) {
+      container.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">No orders yet. <a href="index.html">Start shopping!</a></p>';
+      return;
+    }
+
+    let html = '<table><thead><tr><th>Order ID</th><th>Product</th><th>Date</th><th>Price</th><th>Status</th></tr></thead><tbody>';
+    orders.forEach(o => {
+      html += `<tr>
+        <td>${o.id}</td>
+        <td>${o.productName}</td>
+        <td>${o.date}</td>
+        <td>₨${o.price}</td>
+        <td><span class="status ${o.status}">${getStatusText(o.status)}</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function getStatusText(status) {
+    switch(status) {
+      case 'pending': return 'Pending 📋';
+      case 'processing': return 'Processing ⏳';
+      case 'shipped': return 'Shipped 🚚';
+      case 'delivered': return 'Delivered ✅';
+      case 'cancelled': return 'Cancelled ❌';
+      default: return status;
+    }
+  }
+
+  function updateProfileIcon(user) {
+    const icon = document.getElementById('profileIcon');
+    const dropdown = document.getElementById('dropdownMenu');
+    if (user) {
+      icon.innerText = '👤';
+      icon.title = user.email;
+      dropdown.innerHTML = `
+        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
+          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
+        </a>
+        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
+      `;
+    } else {
+      icon.innerText = '👤';
+      icon.title = 'Sign In';
+      dropdown.innerHTML = `
+        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
+        </a>
+      `;
+    }
+  }
+
+  window.toggleDropdown = function() {
+    const dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+      const dropdowns = document.getElementsByClassName('dropdown-menu');
+      for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].classList.remove('show');
+      }
+    }
+  }
+
+  window.signInWithGoogle = function() {
+    window.location.href = 'login.html';
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    window.currentFirebaseUser = user;
+    updateProfileIcon(user);
+    if (user) {
+      updateNav(user);
+      loadUserOrders(user);
+    } else {
+      window.location.href = "login.html";
+    }
+  });
+</script>
+
+</body>
+</html>

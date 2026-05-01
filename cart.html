@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🛒 Cart & Payment - Girls Fit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header style="position:relative;">
+  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
+  <div class="dropdown-menu" id="dropdownMenu">
+    <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+      <span class="google-icon">G</span> Continue with Google
+    </a>
+  </div>
+  <h1>💖 Girls Fit 💖</h1>
+  <nav id="navBar">
+    <a href="index.html">Home</a>
+    <a href="handbags.html">Handbags</a>
+    <a href="pouches.html">Makeup Pouches</a>
+    <a href="returns.html">Returns & Refunds</a>
+    <a href="orders.html">My Orders</a>
+    <a href="cart.html" class="active">🛒 Cart</a>
+  </nav>
+</header>
+
+<section class="orders">
+  <h2>🛒 Your Cart</h2>
+  <ul id="cartList"></ul>
+  <p id="cartTotal"></p>
+
+  <div id="checkoutSection" style="display:none;">
+    <h2 style="margin-top:40px;">💰 Cash on Delivery</h2>
+    <div class="policy-box">
+      <form id="paymentForm" onsubmit="processPayment(event)">
+        <p><b>Full Name</b></p>
+        <input type="text" id="fullName" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+        <p><b>Phone Number</b></p>
+        <input type="tel" id="phone" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+        <p><b>Delivery Address</b></p>
+        <textarea id="address" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
+
+        <div style="background:#fff0f5;padding:15px;border-radius:10px;margin:15px 0;">
+          <p><b>📦 Cash on Delivery</b></p>
+          <p>Pay in cash when your order arrives at your doorstep.</p>
+          <p style="color:#ff5c8a;font-weight:bold;">No advance payment required!</p>
+        </div>
+
+        <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Place Order (Cash on Delivery)</button>
+      </form>
+    </div>
+  </div>
+
+  <p id="emptyCartMsg" style="text-align:center;padding:20px;color:#888;"></p>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
+<script type="module">
+  import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
+
+  // Update nav based on auth state
+  function updateNav(user) {
+    const navBar = document.getElementById('navBar');
+    if (user) {
+      const ordersLink = user.email === 'm.abbas.askri@gmail.com' ?
+        '<a href="admin.html">👩‍💼 Admin</a>' :
+        '<a href="orders.html">My Orders</a>';
+      navBar.innerHTML = `
+        <a href="index.html">Home</a>
+        <a href="handbags.html">Handbags</a>
+        <a href="pouches.html">Makeup Pouches</a>
+        <a href="returns.html">Returns & Refunds</a>
+        ${ordersLink}
+        <a href="cart.html" class="active">🛒 Cart</a>
+        <a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (${user.email})</a>
+      `;
+    }
+  }
+
+  window.logoutUser = function() {
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+  };
+
+  function showCart() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const list = document.getElementById('cartList');
+    const total = document.getElementById('cartTotal');
+    const checkout = document.getElementById('checkoutSection');
+    const emptyMsg = document.getElementById('emptyCartMsg');
+
+    if (cart.length === 0) {
+      list.innerHTML = "";
+      total.innerText = "";
+      checkout.style.display = "none";
+      emptyMsg.innerText = "Your cart is empty 🛒 Start shopping!";
+      return;
+    }
+
+    let sum = 0;
+    list.innerHTML = "";
+    cart.forEach((item, i) => {
+      list.innerHTML += `<li>${i+1}. ${item.name} — <b>₨${item.price}</b> <button onclick="removeItem(${i})" style="background:#ff5c8a;color:white;border:none;padding:4px 10px;border-radius:10px;cursor:pointer;margin-left:10px;">Remove</button></li>`;
+      sum += item.price;
+    });
+    total.innerText = "Total: ₨" + sum;
+    checkout.style.display = "block";
+    emptyMsg.innerText = "";
+  }
+
+  window.removeItem = function(index) {
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.splice(index, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    showCart();
+  };
+
+  window.processPayment = function(e) {
+    e.preventDefault();
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+
+    const user = window.currentFirebaseUser;
+    const name = document.getElementById('fullName').value;
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+    // Generate order IDs
+    const orders = getOrders();
+    const lastId = orders.length > 0 ? parseInt(orders[orders.length - 1].id?.slice(1) || 1000) : 1000;
+
+    // Create separate orders for each item
+    cart.forEach((item, index) => {
+      orders.push({
+        id: `#${lastId + index + 1}`,
+        customerName: name,
+        customerEmail: user.email,
+        customerPhone: phone,
+        address: address,
+        productName: item.name,
+        price: item.price,
+        date: new Date().toISOString().split('T')[0],
+        status: 'pending'
+      });
+    });
+
+    saveOrders(orders);
+
+    alert("✅ Order Placed Successfully! Thank you " + name + ". Your total of ₨" + total + " will be collected on delivery.");
+
+    localStorage.removeItem('cart');
+    showCart();
+  };
+
+  function updateProfileIcon(user) {
+    const icon = document.getElementById('profileIcon');
+    const dropdown = document.getElementById('dropdownMenu');
+    if (user) {
+      icon.innerText = '👤';
+      icon.title = user.email;
+      dropdown.innerHTML = `
+        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
+          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
+        </a>
+        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
+      `;
+    } else {
+      icon.innerText = '👤';
+      icon.title = 'Sign In';
+      dropdown.innerHTML = `
+        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
+        </a>
+      `;
+    }
+  }
+
+  window.toggleDropdown = function() {
+    const dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+      const dropdowns = document.getElementsByClassName('dropdown-menu');
+      for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].classList.remove('show');
+      }
+    }
+  }
+
+  window.signInWithGoogle = function() {
+    window.location.href = 'login.html';
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    window.currentFirebaseUser = user;
+    updateProfileIcon(user);
+    if (user) {
+      updateNav(user);
+      showCart();
+    } else {
+      window.location.href = "login.html";
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🔐 Login - Girls Fit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header style="position:relative;">
+  <h1>💖 Girls Fit 💖</h1>
+</header>
+
+<section class="products" style="max-width:500px;">
+  <div style="text-align:center;margin-bottom:30px;">
+    <div style="font-size:4em;">💖</div>
+    <p style="color:#ff5c8a;font-size:1.2em;font-weight:bold;">Girls Fit</p>
+  </div>
+  <h2>🔐 Sign In</h2>
+  <div class="policy-box" style="text-align:center;">
+    <p style="margin-bottom:20px;color:#666;">Choose your sign in method:</p>
+
+    <!-- Google Sign In Button -->
+    <button onclick="signInWithGoogle()" style="background:white;border:2px solid #ffc1d6;padding:12px 20px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1em;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px;transition:0.3s;">
+      <span style="color:#4285f4;font-size:1.2em;">G</span> Continue with Google
+    </button>
+
+    <div style="margin:20px 0;color:#ccc;">— OR —</div>
+
+    <!-- Email/Password Form -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <p><b>Email Address</b></p>
+      <input type="email" id="loginEmail" required placeholder="Enter your email" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+      <p><b>Password</b></p>
+      <input type="password" id="loginPassword" required placeholder="Enter your password" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+      <div id="adminNote" style="display:none;background:#fff0f5;padding:10px;border-radius:10px;margin:10px 0;">
+        <p>✨ Admin email detected! You will have full access to the admin panel.</p>
+      </div>
+
+      <p id="errorMsg" style="color:#f44336;display:none;margin-top:10px;"></p>
+
+      <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Sign In with Email</button>
+    </form>
+  </div>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
+<script type="module">
+  import { auth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from './firebase-config.js';
+
+  // Google Sign In
+  window.signInWithGoogle = function() {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        window.currentFirebaseUser = user;
+
+        if (user.email === 'm.abbas.askri@gmail.com') {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "index.html";
+        }
+      })
+      .catch((error) => {
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.innerText = "Google sign-in failed: " + error.message;
+        errorMsg.style.display = 'block';
+      });
+  }
+
+  document.getElementById('loginEmail').addEventListener('input', function() {
+    const adminNote = document.getElementById('adminNote');
+    if (this.value === 'm.abbas.askri@gmail.com') {
+      adminNote.style.display = 'block';
+    } else {
+      adminNote.style.display = 'none';
+    }
+  });
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorMsg = document.getElementById('errorMsg');
+
+    if (!email || !password) {
+      errorMsg.innerText = "Please enter both email and password";
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        window.currentFirebaseUser = user;
+
+        if (user.email === 'm.abbas.askri@gmail.com') {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "index.html";
+        }
+      })
+      .catch((error) => {
+        errorMsg.innerText = "Login failed: " + error.message;
+        errorMsg.style.display = 'block';
+      });
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+  // Redirect if already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.currentFirebaseUser = user;
+      if (user.email === 'm.abbas.askri@gmail.com') {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "index.html";
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
