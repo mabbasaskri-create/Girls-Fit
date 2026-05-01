@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🔐 Login - Girls Fit</title>
+<title>🔐 Sign In - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
+<!-- Firebase Compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 </head>
 <body>
 
@@ -18,11 +23,11 @@
   </div>
   <h2>🔐 Sign In</h2>
   <div class="policy-box" style="text-align:center;">
-    <p style="margin-bottom:20px;color:#666;">Choose your sign in method:</p>
+    <p style="margin-bottom:20px;color:#666;">Sign in with Google:</p>
 
     <!-- Google Sign In Button -->
     <button onclick="signInWithGoogle()" style="background:white;border:2px solid #ffc1d6;padding:12px 20px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1em;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px;transition:0.3s;">
-      <span style="color:#4285f4;font-size:1.2em;">G</span> Continue with Google
+      <span style="color:#4285f4;font-size:1.2em;font-weight:bold;">G</span> Continue with Google
     </button>
 
     <div style="margin:20px 0;color:#ccc;">— OR —</div>
@@ -48,16 +53,32 @@
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
-<script type="module">
-  import { auth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from './firebase-config.js';
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwdHkfb9DBVV5oLYw1WaEPfVN1_MYm30Y",
+    authDomain: "girls-67c84.firebaseapp.com",
+    projectId: "girls-67c84",
+    storageBucket: "girls-67c84.firebasestorage.app",
+    messagingSenderId: "87884221171",
+    appId: "1:87884221171:web:12f70ce888930fe1ab4586",
+    measurementId: "G-SRPHVVDZWK"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const analytics = firebase.analytics();
 
   // Google Sign In
   window.signInWithGoogle = function() {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
+    console.log("Google sign-in button clicked");
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
       .then((result) => {
         const user = result.user;
         window.currentFirebaseUser = user;
+        console.log("Sign-in success:", user.email);
 
         if (user.email === 'm.abbas.askri@gmail.com') {
           window.location.href = "admin.html";
@@ -66,12 +87,14 @@
         }
       })
       .catch((error) => {
+        console.error("Google sign-in error:", error);
         const errorMsg = document.getElementById('errorMsg');
         errorMsg.innerText = "Google sign-in failed: " + error.message;
         errorMsg.style.display = 'block';
       });
   }
 
+  // Email input listener
   document.getElementById('loginEmail').addEventListener('input', function() {
     const adminNote = document.getElementById('adminNote');
     if (this.value === 'm.abbas.askri@gmail.com') {
@@ -81,6 +104,7 @@
     }
   });
 
+  // Email/password login
   function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -93,10 +117,11 @@
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
+    auth.signInWithEmailAndPassword(email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         window.currentFirebaseUser = user;
+        console.log("Login success:", user.email);
 
         if (user.email === 'm.abbas.askri@gmail.com') {
           window.location.href = "admin.html";
@@ -105,6 +130,7 @@
         }
       })
       .catch((error) => {
+        console.error("Login error:", error);
         errorMsg.innerText = "Login failed: " + error.message;
         errorMsg.style.display = 'block';
       });
@@ -113,9 +139,10 @@
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
 
   // Redirect if already logged in
-  onAuthStateChanged(auth, (user) => {
+  auth.onAuthStateChanged((user) => {
     if (user) {
       window.currentFirebaseUser = user;
+      console.log("User already logged in:", user.email);
       if (user.email === 'm.abbas.askri@gmail.com') {
         window.location.href = "admin.html";
       } else {
