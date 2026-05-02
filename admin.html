@@ -98,7 +98,7 @@
   <h2>📦 All Orders</h2>
   <table>
     <thead>
-      <tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Price</th><th>Status</th><th>Update Status</th></tr>
+      <tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Phone</th><th>Address</th><th>Product</th><th>Price</th><th>Status</th><th>Update Status</th></tr>
     </thead>
     <tbody id="ordersTableBody"></tbody>
   </table>
@@ -313,22 +313,25 @@ function loadOrders() {
   }
   orders.forEach(function(o) {
     tbody.innerHTML +=
-      '<tr>' +
-        '<td>' + (o.id || '') + '</td>' +
-        '<td>' + (o.customerName || '') + '</td>' +
-        '<td>' + (o.productName || '') + '</td>' +
-        '<td>₨' + (o.price || 0) + '</td>' +
-        '<td><span class="status ' + (o.status || 'pending') + '">' + getStatusText(o.status) + '</span></td>' +
-        '<td>' +
-          '<select onchange="updateOrderStatus(\'' + (o.id || '') + '\', this.value)" style="padding:5px;border:2px solid #ffc1d6;border-radius:10px;">' +
-            '<option value="pending" ' + ((o.status || 'pending') === 'pending' ? 'selected' : '') + '>Pending</option>' +
-            '<option value="processing" ' + ((o.status || 'pending') === 'processing' ? 'selected' : '') + '>Processing</option>' +
-            '<option value="shipped" ' + ((o.status || 'pending') === 'shipped' ? 'selected' : '') + '>Shipped</option>' +
-            '<option value="delivered" ' + ((o.status || 'pending') === 'delivered' ? 'selected' : '') + '>Delivered</option>' +
-            '<option value="cancelled" ' + ((o.status || 'pending') === 'cancelled' ? 'selected' : '') + '>Cancelled</option>' +
-          '</select>' +
-        '</td>' +
-      '</tr>';
+       '<tr>' +
+         '<td>' + (o.id || '') + '</td>' +
+         '<td>' + (o.customerName || '') + '</td>' +
+         '<td>' + (o.customerEmail || '') + '</td>' +
+         '<td>' + (o.customerPhone || '') + '</td>' +
+         '<td style="font-size:0.9em;">' + (o.city || '') + ', ' + (o.area || '') + '<br>' + (o.address || '') + (o.orderNotes ? '<br><i>Note: ' + o.orderNotes + '</i>' : '') + '</td>' +
+         '<td>' + (o.productName || '') + '</td>' +
+         '<td>₨' + (o.price || 0) + '</td>' +
+         '<td><span class="status ' + (o.status || 'pending') + '">' + getStatusText(o.status) + '</span></td>' +
+         '<td>' +
+           '<select onchange="updateOrderStatus(\'' + (o.id || '') + '\', this.value)" style="padding:5px;border:2px solid #ffc1d6;border-radius:10px;">' +
+             '<option value="pending" ' + ((o.status || 'pending') === 'pending' ? 'selected' : '') + '>Pending</option>' +
+             '<option value="processing" ' + ((o.status || 'pending') === 'processing' ? 'selected' : '') + '>Processing</option>' +
+             '<option value="shipped" ' + ((o.status || 'pending') === 'shipped' ? 'selected' : '') + '>Shipped</option>' +
+             '<option value="delivered" ' + ((o.status || 'pending') === 'delivered' ? 'selected' : '') + '>Delivered</option>' +
+             '<option value="cancelled" ' + ((o.status || 'pending') === 'cancelled' ? 'selected' : '') + '>Cancelled</option>' +
+           '</select>' +
+         '</td>' +
+       '</tr>';
   });
 }
 

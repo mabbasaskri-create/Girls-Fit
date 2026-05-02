@@ -10,6 +10,61 @@
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 </head>
+<body>
+
+<header style="position:relative;">
+  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
+  <div class="dropdown-menu" id="dropdownMenu"></div>
+  <h1>💖 Girls Fit 💖</h1>
+  <nav id="navBar">
+    <a href="index.html">Home</a>
+    <a href="handbags.html">Handbags</a>
+    <a href="pouches.html">Makeup Pouches</a>
+    <a href="returns.html" class="active">Returns & Refunds</a>
+    <a href="orders.html">My Orders</a>
+    <a href="cart.html">🛒 Cart</a>
+  </nav>
+</header>
+
+<section class="products" style="max-width:600px;">
+  <h2>📋 Returns & Refunds</h2>
+  <div class="policy-box">
+    <h3 style="color:#ff5c8a;">Return Policy</h3>
+    <p>We accept returns within <b>7 days</b> of delivery. Items must be unused and in original packaging.</p>
+    <p>💖 <b>Note:</b> Custom or personalized items cannot be returned.</p>
+  </div>
+
+  <h3 style="color:#ff5c8a;margin-top:30px;">Request a Return</h3>
+  <form onsubmit="submitReturn(event)" style="background:#fff0f5;padding:30px;border-radius:20px;">
+    <p><b>Full Name</b></p>
+    <input type="text" id="returnName" required placeholder="Enter your full name" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+    <p><b>Order ID</b></p>
+    <input type="text" id="returnOrderId" required placeholder="e.g. #1001" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+    <p><b>Product Name</b></p>
+    <input type="text" id="returnProduct" required placeholder="Enter product name" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+    <p><b>Return Reason</b></p>
+    <select id="returnReason" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+      <option value="">Select a reason</option>
+      <option value="Defective product">Defective product</option>
+      <option value="Wrong item received">Wrong item received</option>
+      <option value="Size issue">Size issue</option>
+      <option value="Changed mind">Changed mind</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <p><b>Additional Details</b></p>
+    <textarea id="returnDetails" rows="3" placeholder="Provide more details about your return..." style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
+
+    <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Submit Return Request 💖</button>
+  </form>
+  <div id="returnMsg" style="text-align:center;margin-top:15px;"></div>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
 <script>
   // Firebase already initialized by firebase-config.js
 
@@ -89,6 +144,44 @@
     firebase.auth().signOut().then(() => {
       window.location.href = "login.html";
     });
+  };
+
+  window.submitReturn = function(e) {
+    e.preventDefault();
+    const user = window.currentFirebaseUser;
+    if (!user) {
+      alert("Please login to submit a return request!");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const name = document.getElementById('returnName').value;
+    const orderId = document.getElementById('returnOrderId').value;
+    const product = document.getElementById('returnProduct').value;
+    const reason = document.getElementById('returnReason').value;
+    const details = document.getElementById('returnDetails').value;
+
+    // Save return request to localStorage
+    const returns = JSON.parse(localStorage.getItem('returnRequests')) || [];
+    returns.push({
+      id: returns.length + 1,
+      customerName: name,
+      customerEmail: user.email,
+      orderId: orderId,
+      productName: product,
+      reason: reason,
+      details: details,
+      date: new Date().toISOString().split('T')[0],
+      status: 'pending'
+    });
+    localStorage.setItem('returnRequests', JSON.stringify(returns));
+
+    document.getElementById('returnMsg').innerHTML = '<p style="color:#4CAF50;font-weight:bold;">✅ Return request submitted! We will contact you soon.</p>';
+    document.getElementById('returnName').value = '';
+    document.getElementById('returnOrderId').value = '';
+    document.getElementById('returnProduct').value = '';
+    document.getElementById('returnReason').value = '';
+    document.getElementById('returnDetails').value = '';
   };
 
   // Auth handling that waits for persistence to restore before acting on null

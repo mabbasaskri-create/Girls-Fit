@@ -38,11 +38,42 @@
       <p><b>Full Name</b></p>
       <input type="text" id="fullName" required placeholder="Enter your full name" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
 
+      <p><b>Email Address</b></p>
+      <input type="email" id="customerEmail" required placeholder="Enter your email" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
       <p><b>Phone Number</b></p>
       <input type="tel" id="phone" required placeholder="Enter your phone number" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
 
+      <p><b>City</b></p>
+      <select id="city" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+        <option value="">Select your city</option>
+        <option value="Karachi">Karachi</option>
+        <option value="Lahore">Lahore</option>
+        <option value="Islamabad">Islamabad</option>
+        <option value="Rawalpindi">Rawalpindi</option>
+        <option value="Faisalabad">Faisalabad</option>
+        <option value="Multan">Multan</option>
+        <option value="Peshawar">Peshawar</option>
+        <option value="Quetta">Quetta</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <p><b>Area/Location</b></p>
+      <input type="text" id="area" required placeholder="Enter your area/location" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
       <p><b>Delivery Address</b></p>
-      <textarea id="address" required placeholder="Enter your full address" rows="3" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
+      <textarea id="address" required placeholder="Enter your full address (house #, street, block, etc.)" rows="3" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
+
+      <p><b>Payment Method</b></p>
+      <div style="margin:10px 0;padding:10px;background:white;border-radius:10px;border:2px solid #ffc1d6;">
+        <label style="display:flex;align-items:center;cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="cod" checked style="margin-right:10px;">
+          💵 Cash on Delivery (Pay when you receive)
+        </label>
+      </div>
+
+      <p><b>Order Notes (Optional)</b></p>
+      <textarea id="orderNotes" placeholder="Any special instructions for delivery..." rows="2" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
 
       <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Place Order 💖</button>
     </form>
@@ -165,42 +196,50 @@
     showCart();
   };
 
-  window.processPayment = function(e) {
-    e.preventDefault();
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
-    }
+   window.processPayment = function(e) {
+     e.preventDefault();
+     const cart = JSON.parse(localStorage.getItem('cart')) || [];
+     if (cart.length === 0) {
+       alert("Your cart is empty!");
+       return;
+     }
 
-    const user = window.currentFirebaseUser;
-    const name = document.getElementById('fullName').value;
-    const phone = document.getElementById('phone').value;
-    const address = document.getElementById('address').value;
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+     const user = window.currentFirebaseUser;
+     const name = document.getElementById('fullName').value;
+     const email = document.getElementById('customerEmail').value;
+     const phone = document.getElementById('phone').value;
+     const city = document.getElementById('city').value;
+     const area = document.getElementById('area').value;
+     const address = document.getElementById('address').value;
+     const orderNotes = document.getElementById('orderNotes').value;
+     const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-    const orders = getOrders();
-    const lastId = orders.length > 0 ? parseInt(orders[orders.length - 1].id?.slice(1) || 1000) : 1000;
+     const orders = getOrders();
+     const lastId = orders.length > 0 ? parseInt(orders[orders.length - 1].id?.slice(1) || 1000) : 1000;
 
-    cart.forEach((item, index) => {
-      orders.push({
-        id: `#${lastId + index + 1}`,
-        customerName: name,
-        customerEmail: user.email,
-        customerPhone: phone,
-        address: address,
-        productName: item.name,
-        price: item.price,
-        date: new Date().toISOString().split('T')[0],
-        status: 'pending'
-      });
-    });
+     cart.forEach((item, index) => {
+       orders.push({
+         id: `#${lastId + index + 1}`,
+         customerName: name,
+         customerEmail: email,
+         customerPhone: phone,
+         city: city,
+         area: area,
+         address: address,
+         orderNotes: orderNotes,
+         paymentMethod: 'Cash on Delivery',
+         productName: item.name,
+         price: item.price,
+         date: new Date().toISOString().split('T')[0],
+         status: 'pending'
+       });
+     });
 
-    saveOrders(orders);
-    alert("✅ Order Placed Successfully! Thank you " + name + ". Your total of ₨" + total + " will be collected on delivery.");
-    localStorage.removeItem('cart');
-    showCart();
-  };
+     saveOrders(orders);
+     alert("✅ Order Placed Successfully! Thank you " + name + ". Your total of ₨" + total + " will be collected on delivery.");
+     localStorage.removeItem('cart');
+     showCart();
+   };
 
   // Auth handling that waits for persistence to restore before acting on null
   let authHandled = false;
