@@ -15,3 +15,5 @@ const app = firebase.app();
 window.firebaseAuth = firebase.auth();
 // Use the correct bucket explicitly
 window.firebaseStorage = firebase.storage();
+// Initialize Realtime Database
+window.firebaseDB = firebase.database();
