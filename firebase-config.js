@@ -6,8 +6,7 @@ const firebaseConfig = {
   storageBucket: "girls-fit-e5735.firebasestorage.app",
   messagingSenderId: "1077696059801",
   appId: "1:1077696059801:web:51778a835c80a70bb91b08",
-  measurementId: "G-5Y2BYVN7H5",
-  databaseURL: "https://girls-fit-e5735-default-rtdb.firebaseio.com"
+  measurementId: "G-5Y2BYVN7H5"
 };
 
 // Initialize Firebase
@@ -16,20 +15,11 @@ const app = firebase.app();
 window.firebaseAuth = firebase.auth();
 // Use the correct bucket explicitly
 window.firebaseStorage = firebase.storage();
-// Initialize Realtime Database
+// Initialize Firestore
 try {
-  window.firebaseDB = firebase.database();
-  // Test connection
-  window.firebaseDB.ref('.info/connected').once('value', function(snap) {
-    if (snap.val() === true) {
-      console.log('✅ Firebase Realtime Database connected!');
-    } else {
-      console.log('⚠️ Firebase Database - not connected yet (may need correct URL)');
-    }
-  });
-  console.log('✅ Firebase Realtime Database initialized');
+  window.firebaseDB = firebase.firestore();
+  console.log('✅ Firebase Firestore initialized');
 } catch (err) {
-  console.error('❌ Firebase Realtime Database init error:', err);
-  console.log('📋 To fix: Go to Firebase Console → Realtime Database → Create Database');
-  console.log('📋 Correct Database URL should be in Firebase Console → Realtime Database → "Data" tab (top)');
+  console.error('❌ Firebase Firestore init error:', err);
+  console.log('📋 To fix: Go to Firebase Console → Firestore Database → Create Database');
 }

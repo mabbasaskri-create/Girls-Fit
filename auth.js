@@ -1,49 +1,70 @@
-// Auth & Data Management with Firebase
+// Auth & Data Management with Firebase Firestore
 const ADMIN_EMAIL = "m.abbas.askri@gmail.com";
 
-// Initialize Firebase Realtime Database references
-function getProductsRef() {
-  return window.firebaseDB.ref('products');
-}
-
-function getOrdersRef() {
-  return window.firebaseDB.ref('orders');
-}
-
-// Get products from Firebase Realtime DB
+// Get products from Firestore
 function getProducts() {
-  // Fallback to localStorage if Firebase not ready
   return JSON.parse(localStorage.getItem('products')) || [];
 }
 
-// Save products to Firebase Realtime DB
+// Save products to Firestore
 function saveProducts(products) {
   try {
-    if (window.firebaseDB) {
-      window.firebaseDB.ref('products').set(products);
-    }
     localStorage.setItem('products', JSON.stringify(products));
+    if (window.firebaseDB) {
+      // Firestore: save as collection
+      const batch = window.firebaseDB.batch();
+      const productsRef = window.firebaseDB.collection('products');
+      
+      // Clear existing
+      productsRef.get().then(function(snapshot) {
+        snapshot.forEach(function(doc) {
+          batch.delete(doc.ref);
+        });
+        // Add new products
+        products.forEach(function(product, index) {
+          batch.set(productsRef.doc(String(index)), product);
+        });
+        return batch.commit();
+      }).then(function() {
+        console.log('✅ Products saved to Firestore');
+      }).catch(function(err) {
+        console.error('Firestore save error:', err);
+      });
+    }
   } catch(err) {
     console.error('saveProducts error:', err);
-    localStorage.setItem('products', JSON.stringify(products));
   }
 }
 
-// Get orders from Firebase Realtime DB
+// Get orders from Firestore
 function getOrders() {
   return JSON.parse(localStorage.getItem('orders')) || [];
 }
 
-// Save orders to Firebase Realtime DB
+// Save orders to Firestore
 function saveOrders(orders) {
   try {
-    if (window.firebaseDB) {
-      window.firebaseDB.ref('orders').set(orders);
-    }
     localStorage.setItem('orders', JSON.stringify(orders));
+    if (window.firebaseDB) {
+      const batch = window.firebaseDB.batch();
+      const ordersRef = window.firebaseDB.collection('orders');
+      
+      ordersRef.get().then(function(snapshot) {
+        snapshot.forEach(function(doc) {
+          batch.delete(doc.ref);
+        });
+        orders.forEach(function(order, index) {
+          batch.set(ordersRef.doc(String(index)), order);
+        });
+        return batch.commit();
+      }).then(function() {
+        console.log('✅ Orders saved to Firestore');
+      }).catch(function(err) {
+        console.error('Firestore save error:', err);
+      });
+    }
   } catch(err) {
     console.error('saveOrders error:', err);
-    localStorage.setItem('orders', JSON.stringify(orders));
   }
 }
 
@@ -54,84 +75,73 @@ function generateOrderId() {
   return `#${lastId + 1}`;
 }
 
-// Sync products from Firebase on load (for ALL devices)
+// Sync products from Firestore on load (for ALL devices)
 function syncProductsFromFirebase() {
   if (!window.firebaseDB) return;
   
-  window.firebaseDB.ref('products').once('value').then(function(snapshot) {
-    const data = snapshot.val();
-    if (data) {
-      const products = Array.isArray(data) ? data : Object.values(data);
+  window.firebaseDB.collection('products').get().then(function(snapshot) {
+    const products = [];
+    snapshot.forEach(function(doc) {
+      products.push(doc.data());
+    });
+    
+    if (products.length > 0) {
       localStorage.setItem('products', JSON.stringify(products));
-      console.log('Products synced from Firebase:', products.length);
-      // Reload products display if function exists
-      if (typeof loadFeaturedProducts === 'function') loadFeaturedProducts();
-      if (typeof loadHandbags === 'function') loadHandbags();
-      if (typeof loadPouches === 'function') loadPouches();
-      if (typeof loadProducts === 'function') loadProducts();
+      console.log('✅ Products synced from Firestore:', products.length);
     } else {
-      // Firebase is empty, clear localStorage too
-      console.log('Firebase products empty, clearing localStorage');
+      console.log('Firestore products empty, clearing localStorage');
       localStorage.setItem('products', JSON.stringify([]));
-      if (typeof loadFeaturedProducts === 'function') loadFeaturedProducts();
-      if (typeof loadHandbags === 'function') loadHandbags();
-      if (typeof loadPouches === 'function') loadPouches();
-      if (typeof loadProducts === 'function') loadProducts();
     }
+    
+    // Reload products display if function exists
+    if (typeof loadFeaturedProducts === 'function') loadFeaturedProducts();
+    if (typeof loadHandbags === 'function') loadHandbags();
+    if (typeof loadPouches === 'function') loadPouches();
+    if (typeof loadProducts === 'function') loadProducts();
   }).catch(function(err) {
     console.error('Sync products error:', err);
   });
 }
 
-// Sync orders from Firebase
+// Sync orders from Firestore
 function syncOrdersFromFirebase() {
   if (!window.firebaseDB) return;
   
-  window.firebaseDB.ref('orders').once('value').then(function(snapshot) {
-    const data = snapshot.val();
-    if (data) {
-      const orders = Array.isArray(data) ? data : Object.values(data);
+  window.firebaseDB.collection('orders').get().then(function(snapshot) {
+    const orders = [];
+    snapshot.forEach(function(doc) {
+      orders.push(doc.data());
+    });
+    
+    if (orders.length > 0) {
       localStorage.setItem('orders', JSON.stringify(orders));
-      console.log('Orders synced from Firebase:', orders.length);
-      if (typeof loadOrders === 'function') loadOrders();
-      if (typeof loadUserOrders === 'function') loadUserOrders(firebase.auth().currentUser);
+      console.log('✅ Orders synced from Firestore:', orders.length);
     }
+    
+    if (typeof loadOrders === 'function') loadOrders();
+    if (typeof loadUserOrders === 'function') loadUserOrders(firebase.auth().currentUser);
   }).catch(function(err) {
     console.error('Sync orders error:', err);
   });
 }
 
-// Listen for realtime product updates (ALL devices get updates instantly)
+// Listen for Firestore product updates (polling-based for all devices)
 function listenForProductUpdates() {
   if (!window.firebaseDB) return;
   
-  window.firebaseDB.ref('products').on('value', function(snapshot) {
-    const data = snapshot.val();
-    if (data) {
-      const products = Array.isArray(data) ? data : Object.values(data);
-      localStorage.setItem('products', JSON.stringify(products));
-      // Reload displays
-      if (typeof loadFeaturedProducts === 'function') loadFeaturedProducts();
-      if (typeof loadHandbags === 'function') loadHandbags();
-      if (typeof loadPouches === 'function') loadPouches();
-      if (typeof loadProducts === 'function') loadProducts();
-    }
-  });
+  // Poll every 30 seconds for updates
+  setInterval(function() {
+    syncProductsFromFirebase();
+  }, 30000);
 }
 
-// Listen for realtime order updates
+// Listen for Firestore order updates
 function listenForOrderUpdates() {
   if (!window.firebaseDB) return;
   
-  window.firebaseDB.ref('orders').on('value', function(snapshot) {
-    const data = snapshot.val();
-    if (data) {
-      const orders = Array.isArray(data) ? data : Object.values(data);
-      localStorage.setItem('orders', JSON.stringify(orders));
-      if (typeof loadOrders === 'function') loadOrders();
-      if (typeof loadUserOrders === 'function') loadUserOrders(firebase.auth().currentUser);
-    }
-  });
+  setInterval(function() {
+    syncOrdersFromFirebase();
+  }, 30000);
 }
 
 // Initialize - sync on load

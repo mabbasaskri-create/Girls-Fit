@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 </head>
@@ -411,37 +411,38 @@ document.addEventListener('DOMContentLoaded', function() {
     var products = getProducts();
     console.log('🔄 Attempting to sync products:', products.length, 'products');
     console.log('🔍 window.firebaseDB exists?', !!window.firebaseDB);
-    console.log('🔍 Firebase config:', firebaseConfig);
     
     if (!window.firebaseDB) {
-      alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
-      window.open('https://console.firebase.google.com/project/girls-fit-e5735/database');
+      alert('❌ Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
+      window.open('https://console.firebase.google.com/project/girls-fit-e5735/firestore');
       return;
     }
     
-    // Test connection first
-    window.firebaseDB.ref('.info/connected').once('value').then(function(snap) {
-      console.log('📡 Database connected:', snap.val());
-      if (!snap.val()) {
-        alert('⚠️ Not connected to Firebase. Check console for errors.\n\nTIP: Check if database URL is correct in firebase-config.js');
-        return;
-      }
-      
-      // Proceed with sync
-      window.firebaseDB.ref('products').set(products)
-        .then(function() {
-          console.log('✅ Products synced successfully!');
-          alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
-          loadProducts();
-          loadDashboard();
-        })
-        .catch(function(err) {
-          console.error('❌ Sync error:', err);
-          alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
-        });
+    // Firestore: save products
+    var batch = window.firebaseDB.batch();
+    var productsRef = window.firebaseDB.collection('products');
+    
+    // First clear existing, then add new
+    productsRef.get().then(function(snapshot) {
+      var deletePromises = [];
+      snapshot.forEach(function(doc) {
+        deletePromises.push(doc.ref.delete());
+      });
+      return Promise.all(deletePromises);
+    }).then(function() {
+      // Now add new products
+      var addPromises = products.map(function(product, index) {
+        return productsRef.doc(String(index)).set(product);
+      });
+      return Promise.all(addPromises);
+    }).then(function() {
+      console.log('✅ Products synced to Firestore successfully!');
+      alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
+      loadProducts();
+      loadDashboard();
     }).catch(function(err) {
-      console.error('❌ Connection test failed:', err);
-      alert('❌ Cannot connect to Firebase: ' + (err.message || err));
+      console.error('❌ Sync error:', err);
+      alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
     });
   }
     console.log('Syncing products to Firebase:', products.length, 'products');
@@ -532,21 +533,33 @@ document.addEventListener('DOMContentLoaded', function() {
   window.syncOrdersToFirebase = function() {
     var orders = getOrders();
     if (!window.firebaseDB) {
-      alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
-      window.open('https://console.firebase.google.com/project/girls-fit-e5735/database');
+      alert('❌ Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
+      window.open('https://console.firebase.google.com/project/girls-fit-e5735/firestore');
       return;
     }
-    console.log('Syncing orders to Firebase:', orders.length, 'orders');
-    window.firebaseDB.ref('orders').set(orders)
-      .then(function() {
-        alert('✅ Orders synced to Firebase successfully!');
-        console.log('Orders synced:', orders.length);
-        loadOrders();
-      })
-      .catch(function(err) {
-        console.error('Sync error:', err);
-        alert('❌ Sync failed: ' + (err.message || err) + '\n\nMake sure Realtime Database is created in Firebase Console.');
+    
+    // Firestore: save orders
+    var ordersRef = window.firebaseDB.collection('orders');
+    
+    ordersRef.get().then(function(snapshot) {
+      var deletePromises = [];
+      snapshot.forEach(function(doc) {
+        deletePromises.push(doc.ref.delete());
       });
+      return Promise.all(deletePromises);
+    }).then(function() {
+      var addPromises = orders.map(function(order, index) {
+        return ordersRef.doc(String(index)).set(order);
+      });
+      return Promise.all(addPromises);
+    }).then(function() {
+      console.log('✅ Orders synced to Firestore successfully!');
+      alert('✅ Orders synced to Firebase successfully!');
+      loadOrders();
+    }).catch(function(err) {
+      console.error('❌ Orders sync error:', err);
+      alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
+    });
   }
 
   window.firebaseLogout = function() {
@@ -566,22 +579,25 @@ document.addEventListener('DOMContentLoaded', function() {
       updateProfileIcon(user);
       showAdminPage('dashboard');
       
-      // Check Firebase DB status
+      // Check Firebase Firestore status
       setTimeout(function() {
         if (window.firebaseDB) {
-          window.firebaseDB.ref('.info/connected').once('value').then(function(snap) {
-            var statusDiv = document.getElementById('firebaseStatus');
-            if (snap.val() === true) {
+          // Test Firestore connection by trying to get products
+          window.firebaseDB.collection('products').limit(1).get()
+            .then(function() {
+              var statusDiv = document.getElementById('firebaseStatus');
               statusDiv.innerHTML = '✅ Firebase Connected';
               statusDiv.style.background = '#c8e6c9';
-            } else {
-              statusDiv.innerHTML = '⚠️ Firebase DB Not Connected';
+            })
+            .catch(function(err) {
+              var statusDiv = document.getElementById('firebaseStatus');
+              statusDiv.innerHTML = '⚠️ Firebase Error';
               statusDiv.style.background = '#ffcdd2';
-            }
-          });
+              console.error('Firestore connection error:', err);
+            });
         } else {
           var statusDiv = document.getElementById('firebaseStatus');
-          statusDiv.innerHTML = '❌ Firebase DB Not Initialized';
+          statusDiv.innerHTML = '❌ Firebase Not Initialized';
           statusDiv.style.background = '#ffcdd2';
         }
       }, 2000);
