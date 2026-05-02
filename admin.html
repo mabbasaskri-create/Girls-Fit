@@ -380,6 +380,7 @@ function updateOrderStatus(orderId, newStatus) {
 // ==================== BANNERS ====================
 function loadBanners() {
   var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+  var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
   var container = document.getElementById('bannersList');
   container.innerHTML = '';
 
@@ -389,16 +390,42 @@ function loadBanners() {
   }
 
   banners.forEach(function(banner, index) {
+    var isActive = activeBanner && activeBanner.updatedAt === banner.updatedAt;
+    var imgTag = banner.imageUrl
+      ? '<div style="width:300px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;background:#fff0f5;">' +
+            '<img src="' + banner.imageUrl + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+          '</div>'
+      : '<div style="width:300px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff0f5;border-radius:10px;color:#ccc;">No Image</div>';
     container.innerHTML +=
-      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;">' +
-        '<img src="' + (banner.imageUrl || '') + '" style="width:300px;height:150px;object-fit:cover;border-radius:10px;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;border-left:4px solid ' + (isActive ? '#4caf50' : '#ffc1d6') + ';">' +
+        imgTag +
         '<div style="flex:1;">' +
-          '<h3>' + (banner.title || 'No Title') + '</h3>' +
+          '<h3>' + (banner.title || 'No Title') + ' ' + (isActive ? '<span style="background:#4caf50;color:white;padding:4px 10px;border-radius:10px;font-size:0.8em;font-weight:bold;">✅ Active</span>' : '') + '</h3>' +
           '<p style="color:#666;">' + (banner.subtitle || 'No Subtitle') + '</p>' +
           '<p style="color:#888;font-size:0.9em;">Updated: ' + (banner.updatedAt ? new Date(banner.updatedAt).toLocaleDateString() : 'Unknown') + '</p>' +
         '</div>' +
-        '<div>' +
-          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;">' +
+          (isActive ? '<span style="background:#4caf50;color:white;padding:6px 16px;border-radius:10px;text-align:center;font-size:0.9em;font-weight:bold;">✅ Active</span>' : '<button onclick="setActiveBanner(' + index + ')" style="background:#4caf50;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Set as Active</button>') +
+          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Edit</button>' +
+          '<button onclick="deleteBanner(' + index + ')" style="background:#f44336;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Delete</button>' +
+        '</div>' +
+      '</div>';
+  });
+}
+
+  banners.forEach(function(banner, index) {
+    var isActive = activeBanner && activeBanner.updatedAt === banner.updatedAt;
+    container.innerHTML +=
+      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;border-left:4px solid ' + (isActive ? '#4caf50' : '#ffc1d6') + ';">' +
+        '<img src="' + (banner.imageUrl || '') + '" style="width:300px;height:150px;object-fit:cover;border-radius:10px;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+        '<div style="flex:1;">' +
+          '<h3>' + (banner.title || 'No Title') + ' ' + (isActive ? '<span style="background:#4caf50;color:white;padding:4px 10px;border-radius:10px;font-size:0.8em;">ACTIVE</span>' : '') + '</h3>' +
+          '<p style="color:#666;">' + (banner.subtitle || 'No Subtitle') + '</p>' +
+          '<p style="color:#888;font-size:0.9em;">Updated: ' + (banner.updatedAt ? new Date(banner.updatedAt).toLocaleDateString() : 'Unknown') + '</p>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;">' +
+          (isActive ? '<span style="background:#4caf50;color:white;padding:6px 12px;border-radius:10px;text-align:center;font-size:0.9em;font-weight:bold;">✅ Active</span>' : '<button onclick="setActiveBanner(' + index + ')" style="background:#4caf50;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Set as Active</button>') +
+          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Edit</button>' +
           '<button onclick="deleteBanner(' + index + ')" style="background:#f44336;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Delete</button>' +
         '</div>' +
       '</div>';
@@ -505,7 +532,7 @@ window.setActiveBanner = function(index) {
   var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
   if (banners[index]) {
     localStorage.setItem('siteBanner', JSON.stringify(banners[index]));
-    alert('✅ Banner set as active!');
+    alert('✅ Banner set as active! It will now show on the home page.');
     loadBanners();
   }
 };
