@@ -7,63 +7,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
 </head>
-<body>
-
-<header style="position:relative;">
-  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
-  <div class="dropdown-menu" id="dropdownMenu">
-    <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
-      <span class="google-icon">G</span> Continue with Google
-    </a>
-  </div>
-  <h1>💖 Girls Fit 💖</h1>
-  <nav id="navBar">
-    <a href="index.html">Home</a>
-    <a href="handbags.html">Handbags</a>
-    <a href="pouches.html">Makeup Pouches</a>
-    <a href="returns.html">Returns & Refunds</a>
-    <a href="orders.html">My Orders</a>
-    <a href="cart.html" class="active">🛒 Cart</a>
-  </nav>
-</header>
-
-<section class="orders">
-  <h2>🛒 Your Cart</h2>
-  <ul id="cartList"></ul>
-  <p id="cartTotal"></p>
-
-  <div id="checkoutSection" style="display:none;">
-    <h2 style="margin-top:40px;">💰 Cash on Delivery</h2>
-    <div class="policy-box">
-      <form id="paymentForm" onsubmit="processPayment(event)">
-        <p><b>Full Name</b></p>
-        <input type="text" id="fullName" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-
-        <p><b>Phone Number</b></p>
-        <input type="tel" id="phone" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-
-        <p><b>Delivery Address</b></p>
-        <textarea id="address" required style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
-
-        <div style="background:#fff0f5;padding:15px;border-radius:10px;margin:15px 0;">
-          <p><b>📦 Cash on Delivery</b></p>
-          <p>Pay in cash when your order arrives at your doorstep.</p>
-          <p style="color:#ff5c8a;font-weight:bold;">No advance payment required!</p>
-        </div>
-
-        <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Place Order (Cash on Delivery)</button>
-      </form>
-    </div>
-  </div>
-
-  <p id="emptyCartMsg" style="text-align:center;padding:20px;color:#888;"></p>
-</section>
-
-<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
-
 <script>
-  // Firebase already initialized by auth.js, no need to re-initialize
+  // Firebase already initialized by firebase-config.js
 
   function updateNav(user) {
     const navBar = document.getElementById('navBar');

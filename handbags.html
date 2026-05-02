@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 </head>
 <body>
@@ -31,154 +32,155 @@
 
 <section class="products">
   <h2>👜 Our Handbag Collection 👜</h2>
-  <div class="product-grid" id="handbagsGrid">
-  </div>
+  <div class="product-grid" id="handbagsGrid"></div>
 </section>
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
 <script>
-  // Firebase already initialized by auth.js, no need to re-initialize
+// Update nav based on auth state
+function updateNav(user) {
+  var navBar = document.getElementById('navBar');
+  if (user) {
+    var ordersLink = user.email === 'm.abbas.askri@gmail.com' ?
+      '<a href="admin.html">👩‍💼 Admin</a>' :
+      '<a href="orders.html">My Orders</a>';
+    navBar.innerHTML =
+      '<a href="index.html">Home</a>' +
+      '<a href="handbags.html" class="active">Handbags</a>' +
+      '<a href="pouches.html">Makeup Pouches</a>' +
+      '<a href="returns.html">Returns & Refunds</a>' +
+      ordersLink +
+      '<a href="cart.html">🛒 Cart</a>' +
+      '<a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (' + user.email + ')</a>';
+  }
+}
 
-  // Update nav based on auth state
-  function updateNav(user) {
-    const navBar = document.getElementById('navBar');
-    if (user) {
-      const ordersLink = user.email === 'm.abbas.askri@gmail.com' ?
-        '<a href="admin.html">👩‍💼 Admin</a>' :
-        '<a href="orders.html">My Orders</a>';
-      navBar.innerHTML = `
-        <a href="index.html">Home</a>
-        <a href="handbags.html" class="active">Handbags</a>
-        <a href="pouches.html">Makeup Pouches</a>
-        <a href="returns.html">Returns & Refunds</a>
-        ${ordersLink}
-        <a href="cart.html">🛒 Cart</a>
-        <a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (${user.email})</a>
-      `;
+function updateProfileIcon(user) {
+  var icon = document.getElementById('profileIcon');
+  var dropdown = document.getElementById('dropdownMenu');
+  if (user) {
+    icon.innerText = '👤';
+    icon.title = user.email;
+    dropdown.innerHTML =
+      '<a href="' + (user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html') + '">' +
+        (user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders') +
+      '</a>' +
+      '<a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>';
+  } else {
+    icon.innerText = '👤';
+    icon.title = 'Sign In';
+    dropdown.innerHTML =
+      '<a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">' +
+        '<span class="google-icon" style="color:#4285f4;">G</span> Continue with Google' +
+      '</a>';
+  }
+}
+
+window.toggleDropdown = function() {
+  var dropdown = document.getElementById('dropdownMenu');
+  dropdown.classList.toggle('show');
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.profile-icon')) {
+    var dropdowns = document.getElementsByClassName('dropdown-menu');
+    for (var i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].classList.remove('show');
     }
   }
+}
 
-  function updateProfileIcon(user) {
-    const icon = document.getElementById('profileIcon');
-    const dropdown = document.getElementById('dropdownMenu');
-    if (user) {
-      icon.innerText = '👤';
-      icon.title = user.email;
-      dropdown.innerHTML = `
-        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
-          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
-        </a>
-        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
-      `;
-    } else {
-      icon.innerText = '👤';
-      icon.title = 'Sign In';
-      dropdown.innerHTML = `
-        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
-          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
-        </a>
-      `;
-    }
-  }
-
-  window.toggleDropdown = function() {
-    const dropdown = document.getElementById('dropdownMenu');
-    dropdown.classList.toggle('show');
-  }
-
-  window.onclick = function(event) {
-    if (!event.target.matches('.profile-icon')) {
-      const dropdowns = document.getElementsByClassName('dropdown-menu');
-      for (let i = 0; i < dropdowns.length; i++) {
-        dropdowns[i].classList.remove('show');
+window.signInWithGoogle = function() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .then(function(result) {
+      var user = result.user;
+      window.currentFirebaseUser = user;
+      if (user.email === 'm.abbas.askri@gmail.com') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'handbags.html';
       }
-    }
-  }
-
-  window.signInWithGoogle = function() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        window.currentFirebaseUser = user;
-        if (user.email === 'm.abbas.askri@gmail.com') {
-          window.location.href = 'admin.html';
-        } else {
-          window.location.href = 'index.html';
-        }
-      })
-      .catch((error) => {
-        console.error("Google sign-in error:", error);
-      });
-  };
-
-  window.logoutUser = function() {
-    firebase.auth().signOut().then(() => {
-      window.location.href = "login.html";
+    })
+    .catch(function(error) {
+      console.error("Google sign-in error:", error);
     });
-  };
+};
 
-  // Load handbags
-  function loadHandbags() {
-    const products = getProducts().filter(p => p.category === 'handbag');
-    const container = document.getElementById('handbagsGrid');
+window.logoutUser = function() {
+  firebase.auth().signOut().then(function() {
+    window.location.href = "login.html";
+  });
+};
+
+// Load handbags - use localStorage directly
+function loadHandbags() {
+  try {
+    var products = JSON.parse(localStorage.getItem('products')) || [];
+    var handbags = products.filter(function(p) { return p.category === 'handbag'; });
+    var container = document.getElementById('handbagsGrid');
+    if (!container) return;
     container.innerHTML = '';
-    if (!products.length) {
+    if (!handbags.length) {
       container.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;">No handbags available yet.</p>';
       return;
     }
-    products.forEach(p => {
-      const imgTag = p.image
-        ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;" onerror="this.onerror=null;this.style.display='none';">`
-        : '';
-      container.innerHTML += `
-        <div class="product-card">
-          ${imgTag}
-          <h3>${p.name}</h3><p>₨${p.price}</p>
-          <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${p.price})">Add to Cart</button>
-        </div>`;
+    handbags.forEach(function(p) {
+      var imgTag = p.image ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;" onerror="this.onerror=null;this.style.display=\'none\';">' : '';
+      var safeName = (p.name || '').replace(/'/g, "\\'");
+      container.innerHTML +=
+        '<div class="product-card">' +
+          imgTag +
+          '<h3>' + (p.name || '') + '</h3>' +
+          '<p>₨' + (p.price || 0) + '</p>' +
+          '<button onclick="addToCart(\'' + safeName + '\', ' + (p.price || 0) + ')">Add to Cart</button>' +
+        '</div>';
     });
+  } catch(err) {
+    console.error('loadHandbags error:', err);
   }
+}
 
-  window.addToCart = function(name, price) {
-    const user = window.currentFirebaseUser;
-    if (!user) {
-      alert("Please login to add items to cart!");
-      window.location.href = "login.html";
-      return;
-    }
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    cart.push({ name, price });
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert("💖 " + name + " added to cart!");
-  };
+window.addToCart = function(name, price) {
+  var user = window.currentFirebaseUser;
+  if (!user) {
+    alert("Please login to add items to cart!");
+    window.location.href = "login.html";
+    return;
+  }
+  var cart = JSON.parse(localStorage.getItem('cart')) || [];
+  cart.push({ name: name, price: price });
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert("💖 " + name + " added to cart!");
+};
 
-  // Auth handling that waits for persistence to restore before acting on null
-  let authHandled = false;
-  firebase.auth().onAuthStateChanged((user) => {
-    if (authHandled) return;
-    if (user) {
-      authHandled = true;
-      window.currentFirebaseUser = user;
-      updateProfileIcon(user);
-      updateNav(user);
-      loadHandbags();
-    } else {
-      setTimeout(() => {
-        if (!authHandled) {
-          authHandled = true;
-          const persistedUser = firebase.auth().currentUser;
-          window.currentFirebaseUser = persistedUser;
+// Load products on page load (no auth required for viewing)
+loadHandbags();
+
+// Auth handling for nav/profile updates
+var authHandled = false;
+firebase.auth().onAuthStateChanged(function(user) {
+  if (authHandled) return;
+  if (user) {
+    authHandled = true;
+    window.currentFirebaseUser = user;
+    updateProfileIcon(user);
+    updateNav(user);
+  } else {
+    setTimeout(function() {
+      if (!authHandled) {
+        authHandled = true;
+        var persistedUser = firebase.auth().currentUser;
+        window.currentFirebaseUser = persistedUser;
+        if (persistedUser) {
           updateProfileIcon(persistedUser);
-          if (persistedUser) {
-            updateNav(persistedUser);
-          }
-          loadHandbags();
+          updateNav(persistedUser);
         }
-      }, 1500);
-    }
-  });
+      }
+    }, 1500);
+  }
+});
 </script>
 
 </body>
