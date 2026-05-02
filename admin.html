@@ -14,11 +14,7 @@
 
 <header style="position:relative;">
   <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
-  <div class="dropdown-menu" id="dropdownMenu">
-    <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
-      <span class="google-icon">G</span> Continue with Google
-    </a>
-  </div>
+  <div class="dropdown-menu" id="dropdownMenu"></div>
   <h1>💖 Girls Fit 💖</h1>
   <nav>
     <a href="javascript:void(0)" onclick="showAdminPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
@@ -73,9 +69,11 @@
       <option value="handbag">Handbag</option>
       <option value="pouch">Makeup Pouch</option>
     </select>
+    <p><b>Description</b></p>
+    <textarea id="prodDesc" rows="3" placeholder="Product description..." style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
     <p><b>Product Image</b></p>
     <input type="file" id="prodImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p id="currentImage" style="display:none;"><b>Current Image:</b> <img id="currentImgPreview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;"></p>
+    <p id="currentImage" style="display:none;"><b>Current Image:</b><br><img id="currentImgPreview" style="width:200px;height:200px;object-fit:cover;border-radius:10px;margin-top:8px;"></p>
     <p><b>Featured Product</b></p>
     <select id="prodFeatured" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
       <option value="false">No</option>
@@ -87,13 +85,13 @@
     </div>
   </div>
 
-    <!-- Products Table -->
-    <table>
-      <thead>
-        <tr><th>ID</th><th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Featured</th><th>Actions</th></tr>
-      </thead>
-      <tbody id="productsTableBody"></tbody>
-    </table>
+  <!-- Products Table -->
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Category</th><th>Featured</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="productsTableBody"></tbody>
+  </table>
 </div>
 
 <!-- Orders Management -->
@@ -110,374 +108,454 @@
 <!-- Banner Management -->
 <div id="admin-banners" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
   <h2>🖼️ Banner Management</h2>
-  <div class="policy-box">
-    <h3>Current Home Page Banner</h3>
-    <div id="currentBannerPreview" style="margin:15px 0;text-align:center;">
-      <p style="color:#888;">No banner set yet.</p>
-    </div>
-    <p><b>Upload New Banner Image</b></p>
-    <input type="file" id="bannerImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p><b>Banner Title (optional)</b></p>
+
+  <!-- Add Banner Form -->
+  <div class="policy-box" style="margin-bottom:30px;">
+    <h3 id="bannerFormTitle">Add New Banner</h3>
+    <input type="hidden" id="editBannerIndex" value="-1">
+    <p><b>Banner Title</b></p>
     <input type="text" id="bannerTitle" placeholder="Girls Fit" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p><b>Banner Subtitle (optional)</b></p>
+    <p><b>Banner Subtitle</b></p>
     <input type="text" id="bannerSubtitle" placeholder="Your one-stop shop" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <p><b>Banner Image</b></p>
+    <input type="file" id="bannerImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <p id="currentBannerPreview" style="display:none;"><b>Current Image:</b><br><img id="currentBannerImg" style="max-width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-top:8px;"></p>
     <div style="margin-top:15px;">
       <button onclick="saveBanner()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">Save Banner</button>
-      <button onclick="removeBanner()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">Remove Banner</button>
+      <button onclick="cancelBanner()" style="background:#ccc;color:#333;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">Cancel</button>
     </div>
   </div>
+
+  <!-- Banners List -->
+  <h3>All Banners</h3>
+  <div id="bannersList"></div>
 </div>
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
 <script>
-  // Wait for Firebase auth to be ready, handling initial null from persistence restore
-  let authHandled = false;
-  function handleAuth(user) {
-    if (authHandled) return;
-    authHandled = true;
-    if (!user || user.email !== 'm.abbas.askri@gmail.com') {
-      window.location.href = "login.html";
-      return;
-    }
-    window.currentFirebaseUser = user;
-    updateProfileIcon(user);
+// Wait for Firebase auth
+let authHandled = false;
+function handleAuth(user) {
+  if (authHandled) return;
+  authHandled = true;
+  if (!user || user.email !== 'm.abbas.askri@gmail.com') {
+    window.location.href = "login.html";
+    return;
   }
+  window.currentFirebaseUser = user;
+  updateProfileIcon(user);
+}
 
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      handleAuth(user);
-    } else {
-      // Wait a bit for auth to restore from persistence before redirecting
-      setTimeout(() => {
-        if (!authHandled) {
-          handleAuth(firebase.auth().currentUser);
-        }
-      }, 1500);
-    }
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    handleAuth(user);
+  } else {
+    setTimeout(function() {
+      if (!authHandled) {
+        handleAuth(firebase.auth().currentUser);
+      }
+    }, 1500);
+  }
+});
+
+function showAdminPage(page) {
+  document.querySelectorAll('.admin-page').forEach(function(p) { p.style.display = 'none'; });
+  document.querySelectorAll('nav a').forEach(function(a) { a.classList.remove('active'); });
+  document.getElementById('admin-' + page).style.display = 'block';
+  document.getElementById('nav-' + page).classList.add('active');
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'products') loadProducts();
+  if (page === 'orders') loadOrders();
+  if (page === 'banners') loadBanners();
+}
+
+// ==================== DASHBOARD ====================
+function loadDashboard() {
+  var products = getProducts();
+  var orders = getOrders();
+  document.getElementById('dashTotalProducts').innerText = products.length;
+  document.getElementById('dashHandbags').innerText = products.filter(function(p) { return p.category === 'handbag'; }).length;
+  document.getElementById('dashPouches').innerText = products.filter(function(p) { return p.category === 'pouch'; }).length;
+  document.getElementById('dashOrders').innerText = orders.length;
+}
+
+// ==================== PRODUCTS ====================
+function loadProducts() {
+  var products = getProducts();
+  var tbody = document.getElementById('productsTableBody');
+  tbody.innerHTML = '';
+  if (!products.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#888;">No products yet.</td></tr>';
+    return;
+  }
+  products.forEach(function(p) {
+    var imgTag = p.image
+      ? '<img src="' + p.image + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null;this.style.display=\'none\';">'
+      : 'No image';
+    var desc = (p.description || 'No description').substring(0, 50) + ((p.description || '').length > 50 ? '...' : '');
+    tbody.innerHTML +=
+      '<tr>' +
+        '<td>' + p.id + '</td>' +
+        '<td>' + imgTag + '</td>' +
+        '<td>' + (p.name || '') + '</td>' +
+        '<td style="max-width:200px;font-size:0.9em;color:#666;">' + desc + '</td>' +
+        '<td>₨' + (p.price || 0) + '</td>' +
+        '<td>' + (p.category === 'handbag' ? '👜 Handbag' : '💄 Pouch') + '</td>' +
+        '<td>' + (p.featured ? '✅' : '❌') + '</td>' +
+        '<td>' +
+          '<button onclick="editProduct(' + p.id + ')" style="background:#2196f3;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
+          '<button onclick="deleteProduct(' + p.id + ')" style="background:#f44336;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;">Delete</button>' +
+        '</td>' +
+      '</tr>';
   });
+}
 
-  function showAdminPage(page) {
-    document.querySelectorAll('.admin-page').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    document.getElementById('admin-' + page).style.display = 'block';
-    document.getElementById('nav-' + page).classList.add('active');
+function showAddProduct() {
+  document.getElementById('formTitle').innerText = 'Add New Product';
+  document.getElementById('editId').value = '';
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodPrice').value = '';
+  document.getElementById('prodCategory').value = 'handbag';
+  document.getElementById('prodDesc').value = '';
+  document.getElementById('prodImage').value = '';
+  document.getElementById('prodFeatured').value = 'false';
+  document.getElementById('currentImage').style.display = 'none';
+  document.getElementById('productForm').style.display = 'block';
+}
 
-    if (page === 'dashboard') loadDashboard();
-    if (page === 'products') loadProducts();
-    if (page === 'orders') loadOrders();
-    if (page === 'banners') loadBannerPreview();
-  }
-
-  // Banner Management
-  function loadBannerPreview() {
-    const banner = JSON.parse(localStorage.getItem('siteBanner')) || null;
-    const preview = document.getElementById('currentBannerPreview');
-    if (banner && preview) {
-      preview.innerHTML = `
-        <div style="position:relative;display:inline-block;max-width:100%;">
-          <img src="${banner.imageUrl}" style="max-width:100%;max-height:300px;border-radius:10px;object-fit:cover;">
-          <div style="margin-top:10px;">
-            <p><b>Title:</b> ${banner.title || 'None'}</p>
-            <p><b>Subtitle:</b> ${banner.subtitle || 'None'}</p>
-          </div>
-        </div>`;
-    } else if (preview) {
-      preview.innerHTML = '<p style="color:#888;">No banner set yet.</p>';
-    }
-  }
-
-  async function saveBanner() {
-    try {
-      const imageFile = document.getElementById('bannerImage').files[0];
-      const title = document.getElementById('bannerTitle').value.trim();
-      const subtitle = document.getElementById('bannerSubtitle').value.trim();
-
-      let imageData = '';
-      if (imageFile) {
-        try {
-          imageData = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(imageFile);
-          });
-        } catch (err) {
-          console.error("Banner image read failed:", err);
-          alert("Image processing failed: " + (err.message || err));
-        }
-      }
-
-      const existingBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
-      const bannerData = {
-        imageUrl: imageData || existingBanner.imageUrl || '',
-        title: title || existingBanner.title || '',
-        subtitle: subtitle || existingBanner.subtitle || '',
-        updatedAt: new Date().toISOString()
-      };
-
-      localStorage.setItem('siteBanner', JSON.stringify(bannerData));
-      alert("✅ Banner saved successfully!");
-      loadBannerPreview();
-
-      // Clear inputs
-      document.getElementById('bannerImage').value = '';
-      document.getElementById('bannerTitle').value = '';
-      document.getElementById('bannerSubtitle').value = '';
-    } catch (err) {
-      console.error("Save banner error:", err);
-      alert("Error saving banner: " + (err.message || err));
-    }
-  }
-
-  function removeBanner() {
-    if (!confirm("Are you sure you want to remove the banner?")) return;
-    localStorage.removeItem('siteBanner');
-    alert("✅ Banner removed successfully!");
-    loadBannerPreview();
-  }
-
-  // Dashboard
-  function loadDashboard() {
-    const products = getProducts();
-    const orders = getOrders();
-    document.getElementById('dashTotalProducts').innerText = products.length;
-    document.getElementById('dashHandbags').innerText = products.filter(p => p.category === 'handbag').length;
-    document.getElementById('dashPouches').innerText = products.filter(p => p.category === 'pouch').length;
-    document.getElementById('dashOrders').innerText = orders.length;
-  }
-
-  // Products
-  function loadProducts() {
-    const products = getProducts();
-    const tbody = document.getElementById('productsTableBody');
-    tbody.innerHTML = '';
-    products.forEach(p => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${p.id}</td>
-          <td><img src="${p.image || 'https://via.placeholder.com/50'}" style="width:50px;height:50px;object-fit:cover;border-radius:5px;"></td>
-          <td>${p.name}</td>
-          <td>₨${p.price}</td>
-          <td>${p.category === 'handbag' ? '👜 Handbag' : '💄 Pouch'}</td>
-          <td>${p.featured ? '✅' : '❌'}</td>
-          <td>
-            <button onclick="editProduct(${p.id})" style="background:#2196f3;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>
-            <button onclick="deleteProduct(${p.id})" style="background:#f44336;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;">Delete</button>
-          </td>
-        </tr>`;
-    });
-  }
-
-  function showAddProduct() {
-    document.getElementById('formTitle').innerText = 'Add New Product';
-    document.getElementById('editId').value = '';
-    document.getElementById('prodName').value = '';
-    document.getElementById('prodPrice').value = '';
-    document.getElementById('prodCategory').value = 'handbag';
-    document.getElementById('prodImage').value = '';
-    document.getElementById('prodFeatured').value = 'false';
+function editProduct(id) {
+  var products = getProducts();
+  var product = products.find(function(p) { return p.id === id; });
+  if (!product) { alert('Product not found!'); return; }
+  document.getElementById('formTitle').innerText = 'Edit Product';
+  document.getElementById('editId').value = product.id;
+  document.getElementById('prodName').value = product.name || '';
+  document.getElementById('prodPrice').value = product.price || '';
+  document.getElementById('prodCategory').value = product.category || 'handbag';
+  document.getElementById('prodDesc').value = product.description || '';
+  document.getElementById('prodFeatured').value = product.featured ? 'true' : 'false';
+  if (product.image) {
+    document.getElementById('currentImage').style.display = 'block';
+    document.getElementById('currentImgPreview').src = product.image;
+  } else {
     document.getElementById('currentImage').style.display = 'none';
-    document.getElementById('productForm').style.display = 'block';
   }
+  document.getElementById('productForm').style.display = 'block';
+}
 
-  function editProduct(id) {
-    const products = getProducts();
-    const product = products.find(p => p.id === id);
-    document.getElementById('formTitle').innerText = 'Edit Product';
-    document.getElementById('editId').value = product.id;
-    document.getElementById('prodName').value = product.name;
-    document.getElementById('prodPrice').value = product.price;
-    document.getElementById('prodCategory').value = product.category;
-    document.getElementById('prodFeatured').value = product.featured ? 'true' : 'false';
-    if (product.image) {
-      document.getElementById('currentImage').style.display = 'block';
-      document.getElementById('currentImgPreview').src = product.image;
-    } else {
-      document.getElementById('currentImage').style.display = 'none';
-    }
-    document.getElementById('productForm').style.display = 'block';
-  }
+window.saveProduct = async function() {
+  try {
+    var editId = document.getElementById('editId').value;
+    var name = document.getElementById('prodName').value.trim();
+    var price = parseInt(document.getElementById('prodPrice').value);
+    var category = document.getElementById('prodCategory').value;
+    var description = document.getElementById('prodDesc').value.trim();
+    var featured = document.getElementById('prodFeatured').value === 'true';
+    var imageFile = document.getElementById('prodImage').files[0];
 
-  window.saveProduct = async function() {
-    try {
-      const editId = document.getElementById('editId').value;
-      const name = document.getElementById('prodName').value.trim();
-      const price = parseInt(document.getElementById('prodPrice').value);
-      const category = document.getElementById('prodCategory').value;
-      const featured = document.getElementById('prodFeatured').value === 'true';
-      const imageFile = document.getElementById('prodImage').files[0];
-
-      if (!name || !price || price <= 0) {
-        alert("Please fill all fields with valid values");
-        return;
-      }
-
-      let imageData = '';
-      if (imageFile) {
-        try {
-          imageData = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(imageFile);
-          });
-        } catch (err) {
-          console.error("Image read failed:", err);
-          alert("Image processing failed: " + (err.message || err));
-        }
-      }
-
-      let products = getProducts();
-      if (!Array.isArray(products)) products = [];
-
-      if (editId) {
-        const index = products.findIndex(p => String(p.id) === String(editId));
-        if (index === -1) {
-          alert("Product not found!");
-          return;
-        }
-        const existingImage = products[index].image || '';
-        products[index] = {
-          id: Number(editId),
-          name,
-          price,
-          category,
-          featured,
-          image: imageData || existingImage
-        };
-      } else {
-        const newId = products.length > 0 ? Math.max(...products.map(p => Number(p.id) || 0)) + 1 : 1;
-        products.push({
-          id: newId,
-          name,
-          price,
-          category,
-          featured,
-          image: imageData
-        });
-      }
-
-      saveProducts(products);
-      alert("✅ Product saved successfully!");
-      cancelProduct();
-      loadProducts();
-    } catch (err) {
-      console.error("Save product error:", err);
-      alert("Error saving product: " + (err.message || err));
-    }
-  };
-
-  function cancelProduct() {
-    document.getElementById('productForm').style.display = 'none';
-  }
-
-  function deleteProduct(id) {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    let products = getProducts();
-    products = products.filter(p => p.id !== id);
-    saveProducts(products);
-    loadProducts();
-  }
-
-  // Orders
-  function loadOrders() {
-    const orders = getOrders();
-    const tbody = document.getElementById('ordersTableBody');
-    tbody.innerHTML = '';
-    if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">No orders yet</td></tr>';
+    if (!name || !price || price <= 0) {
+      alert('Please fill all required fields with valid values');
       return;
     }
-    orders.forEach(o => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${o.id}</td>
-          <td>${o.customerName}</td>
-          <td>${o.productName}</td>
-          <td>₨${o.price}</td>
-          <td><span class="status ${o.status}">${getStatusText(o.status)}</span></td>
-          <td>
-            <select onchange="updateOrderStatus(${o.id}, this.value)" style="padding:5px;border:2px solid #ffc1d6;border-radius:10px;">
-              <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
-              <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
-              <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-              <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-              <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-            </select>
-          </td>
-        </tr>`;
-    });
-  }
 
-  function getStatusText(status) {
-    switch(status) {
-      case 'pending': return 'Pending 📋';
-      case 'processing': return 'Processing ⏳';
-      case 'shipped': return 'Shipped 🚚';
-      case 'delivered': return 'Delivered ✅';
-      case 'cancelled': return 'Cancelled ❌';
-      default: return status;
-    }
-  }
-
-  function updateOrderStatus(orderId, newStatus) {
-    let orders = getOrders();
-    const index = orders.findIndex(o => o.id == orderId);
-    if (index !== -1) {
-      orders[index].status = newStatus;
-      saveOrders(orders);
-      loadOrders();
-    }
-  }
-
-  window.firebaseLogout = function() {
-    firebase.auth().signOut().then(() => {
-      window.location.href = "login.html";
-    });
-  }
-
-  function updateProfileIcon(user) {
-    const icon = document.getElementById('profileIcon');
-    const dropdown = document.getElementById('dropdownMenu');
-    if (user) {
-      icon.innerText = '👤';
-      icon.title = user.email;
-      dropdown.innerHTML = `
-        <a href="admin.html">👩‍💼 Admin Panel</a>
-        <a href="javascript:void(0)" onclick="firebaseLogout()">🚪 Logout</a>
-      `;
-    } else {
-      icon.innerText = '👤';
-      icon.title = 'Sign In';
-      dropdown.innerHTML = `
-        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
-          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
-        </a>
-      `;
-    }
-  }
-
-  window.toggleDropdown = function() {
-    const dropdown = document.getElementById('dropdownMenu');
-    dropdown.classList.toggle('show');
-  }
-
-  window.onclick = function(event) {
-    if (!event.target.matches('.profile-icon')) {
-      const dropdowns = document.getElementsByClassName('dropdown-menu');
-      for (let i = 0; i < dropdowns.length; i++) {
-        dropdowns[i].classList.remove('show');
+    var imageData = '';
+    if (imageFile) {
+      try {
+        imageData = await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function() { resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+      } catch (err) {
+        console.error('Image read failed:', err);
+        alert('Image processing failed: ' + (err.message || err));
       }
     }
+
+    var products = getProducts();
+    if (!Array.isArray(products)) products = [];
+
+    if (editId) {
+      var index = products.findIndex(function(p) { return String(p.id) === String(editId); });
+      if (index === -1) { alert('Product not found!'); return; }
+      var existingImage = products[index].image || '';
+      products[index] = {
+        id: Number(editId),
+        name: name,
+        price: price,
+        category: category,
+        description: description,
+        featured: featured,
+        image: imageData || existingImage
+      };
+    } else {
+      var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return Number(p.id) || 0; })) + 1 : 1;
+      products.push({
+        id: newId,
+        name: name,
+        price: price,
+        category: category,
+        description: description,
+        featured: featured,
+        image: imageData
+      });
+    }
+
+    saveProducts(products);
+    alert('✅ Product saved successfully!');
+    cancelProduct();
+    loadProducts();
+  } catch (err) {
+    console.error('Save product error:', err);
+    alert('Error saving product: ' + (err.message || err));
+  }
+};
+
+function cancelProduct() {
+  document.getElementById('productForm').style.display = 'none';
+}
+
+function deleteProduct(id) {
+  if (!confirm('Are you sure you want to delete this product?')) return;
+  var products = getProducts();
+  products = products.filter(function(p) { return p.id !== id; });
+  saveProducts(products);
+  loadProducts();
+}
+
+// ==================== ORDERS ====================
+function loadOrders() {
+  var orders = getOrders();
+  var tbody = document.getElementById('ordersTableBody');
+  tbody.innerHTML = '';
+  if (orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">No orders yet</td></tr>';
+    return;
+  }
+  orders.forEach(function(o) {
+    tbody.innerHTML +=
+      '<tr>' +
+        '<td>' + (o.id || '') + '</td>' +
+        '<td>' + (o.customerName || '') + '</td>' +
+        '<td>' + (o.productName || '') + '</td>' +
+        '<td>₨' + (o.price || 0) + '</td>' +
+        '<td><span class="status ' + (o.status || 'pending') + '">' + getStatusText(o.status) + '</span></td>' +
+        '<td>' +
+          '<select onchange="updateOrderStatus(\'' + (o.id || '') + '\', this.value)" style="padding:5px;border:2px solid #ffc1d6;border-radius:10px;">' +
+            '<option value="pending" ' + ((o.status || 'pending') === 'pending' ? 'selected' : '') + '>Pending</option>' +
+            '<option value="processing" ' + ((o.status || 'pending') === 'processing' ? 'selected' : '') + '>Processing</option>' +
+            '<option value="shipped" ' + ((o.status || 'pending') === 'shipped' ? 'selected' : '') + '>Shipped</option>' +
+            '<option value="delivered" ' + ((o.status || 'pending') === 'delivered' ? 'selected' : '') + '>Delivered</option>' +
+            '<option value="cancelled" ' + ((o.status || 'pending') === 'cancelled' ? 'selected' : '') + '>Cancelled</option>' +
+          '</select>' +
+        '</td>' +
+      '</tr>';
+  });
+}
+
+function getStatusText(status) {
+  switch(status) {
+    case 'pending': return 'Pending 📋';
+    case 'processing': return 'Processing ⏳';
+    case 'shipped': return 'Shipped 🚚';
+    case 'delivered': return 'Delivered ✅';
+    case 'cancelled': return 'Cancelled ❌';
+    default: return status || 'Pending';
+  }
+}
+
+function updateOrderStatus(orderId, newStatus) {
+  var orders = getOrders();
+  var index = orders.findIndex(function(o) { return o.id == orderId; });
+  if (index !== -1) {
+    orders[index].status = newStatus;
+    saveOrders(orders);
+    loadOrders();
+  }
+}
+
+// ==================== BANNERS ====================
+function loadBanners() {
+  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+  var container = document.getElementById('bannersList');
+  container.innerHTML = '';
+
+  if (!banners.length) {
+    container.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">No banners yet. Use the form above to add one.</p>';
+    return;
   }
 
-  window.signInWithGoogle = function() {
-    window.location.href = 'login.html';
-  };
+  banners.forEach(function(banner, index) {
+    container.innerHTML +=
+      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;">' +
+        '<img src="' + (banner.imageUrl || '') + '" style="width:300px;height:150px;object-fit:cover;border-radius:10px;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+        '<div style="flex:1;">' +
+          '<h3>' + (banner.title || 'No Title') + '</h3>' +
+          '<p style="color:#666;">' + (banner.subtitle || 'No Subtitle') + '</p>' +
+          '<p style="color:#888;font-size:0.9em;">Updated: ' + (banner.updatedAt ? new Date(banner.updatedAt).toLocaleDateString() : 'Unknown') + '</p>' +
+        '</div>' +
+        '<div>' +
+          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
+          '<button onclick="deleteBanner(' + index + ')" style="background:#f44336;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Delete</button>' +
+        '</div>' +
+      '</div>';
+  });
+}
 
-  // Load dashboard by default
-  showAdminPage('dashboard');
+function editBanner(index) {
+  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+  if (!banners[index]) { alert('Banner not found!'); return; }
+  var banner = banners[index];
+  document.getElementById('bannerFormTitle').innerText = 'Edit Banner';
+  document.getElementById('editBannerIndex').value = index;
+  document.getElementById('bannerTitle').value = banner.title || '';
+  document.getElementById('bannerSubtitle').value = banner.subtitle || '';
+  if (banner.imageUrl) {
+    document.getElementById('currentBannerPreview').style.display = 'block';
+    document.getElementById('currentBannerImg').src = banner.imageUrl;
+  } else {
+    document.getElementById('currentBannerPreview').style.display = 'none';
+  }
+  // Scroll to form
+  document.getElementById('bannerFormTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+window.saveBanner = async function() {
+  try {
+    var editIndex = parseInt(document.getElementById('editBannerIndex').value);
+    var title = document.getElementById('bannerTitle').value.trim();
+    var subtitle = document.getElementById('bannerSubtitle').value.trim();
+    var imageFile = document.getElementById('bannerImage').files[0];
+
+    var imageData = '';
+    if (imageFile) {
+      try {
+        imageData = await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function() { resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+      } catch (err) {
+        console.error('Banner image read failed:', err);
+        alert('Image processing failed: ' + (err.message || err));
+      }
+    }
+
+    var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+    var bannerData = {
+      title: title || '',
+      subtitle: subtitle || '',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (editIndex >= 0 && banners[editIndex]) {
+      // Edit existing
+      bannerData.imageUrl = imageData || banners[editIndex].imageUrl || '';
+      banners[editIndex] = bannerData;
+      // If this is the active banner being edited, update it
+      var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
+      if (activeBanner && activeBanner.updatedAt === banners[editIndex].updatedAt) {
+        localStorage.setItem('siteBanner', JSON.stringify(bannerData));
+      }
+    } else {
+      // Add new
+      bannerData.imageUrl = imageData || '';
+      banners.push(bannerData);
+    }
+
+    localStorage.setItem('siteBanners', JSON.stringify(banners));
+    alert('✅ Banner saved successfully!');
+    cancelBanner();
+    loadBanners();
+  } catch (err) {
+    console.error('Save banner error:', err);
+    alert('Error saving banner: ' + (err.message || err));
+  }
+};
+
+function cancelBanner() {
+  document.getElementById('bannerFormTitle').innerText = 'Add New Banner';
+  document.getElementById('editBannerIndex').value = '-1';
+  document.getElementById('bannerTitle').value = '';
+  document.getElementById('bannerSubtitle').value = '';
+  document.getElementById('bannerImage').value = '';
+  document.getElementById('currentBannerPreview').style.display = 'none';
+}
+
+window.deleteBanner = function(index) {
+  if (!confirm('Are you sure you want to delete this banner?')) return;
+  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+  banners.splice(index, 1);
+  localStorage.setItem('siteBanners', JSON.stringify(banners));
+  // If deleted banner was active, clear active banner
+  var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
+  if (!activeBanner || !banners.find(function(b) { return b.updatedAt === activeBanner.updatedAt; })) {
+    localStorage.removeItem('siteBanner');
+  }
+  alert('✅ Banner deleted successfully!');
+  loadBanners();
+};
+
+// Set active banner (called from banner list)
+window.setActiveBanner = function(index) {
+  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
+  if (banners[index]) {
+    localStorage.setItem('siteBanner', JSON.stringify(banners[index]));
+    alert('✅ Banner set as active!');
+    loadBanners();
+  }
+};
+
+// ==================== AUTH/UI ====================
+window.firebaseLogout = function() {
+  firebase.auth().signOut().then(function() {
+    window.location.href = "login.html";
+  });
+};
+
+function updateProfileIcon(user) {
+  var icon = document.getElementById('profileIcon');
+  var dropdown = document.getElementById('dropdownMenu');
+  if (user) {
+    icon.innerText = '👤';
+    icon.title = user.email;
+    dropdown.innerHTML =
+      '<a href="admin.html">👩‍💼 Admin Panel</a>' +
+      '<a href="javascript:void(0)" onclick="firebaseLogout()">🚪 Logout</a>';
+  } else {
+    icon.innerText = '👤';
+    icon.title = 'Sign In';
+    dropdown.innerHTML =
+      '<a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">' +
+        '<span class="google-icon" style="color:#4285f4;">G</span> Continue with Google' +
+      '</a>';
+  }
+}
+
+window.toggleDropdown = function() {
+  var dropdown = document.getElementById('dropdownMenu');
+  dropdown.classList.toggle('show');
+};
+
+window.onclick = function(event) {
+  if (!event.target.matches('.profile-icon')) {
+    var dropdowns = document.getElementsByClassName('dropdown-menu');
+    for (var i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].classList.remove('show');
+    }
+  }
+};
+
+window.signInWithGoogle = function() {
+  window.location.href = 'login.html';
+};
+
+// Load dashboard by default
+showAdminPage('dashboard');
 </script>
 
 </body>
