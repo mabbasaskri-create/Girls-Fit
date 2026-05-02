@@ -71,9 +71,9 @@
     </select>
     <p><b>Description</b></p>
     <textarea id="prodDesc" rows="3" placeholder="Product description..." style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
-    <p><b>Product Image</b></p>
-    <input type="file" id="prodImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p id="currentImage" style="display:none;"><b>Current Image:</b><br><img id="currentImgPreview" style="width:200px;height:200px;object-fit:cover;border-radius:10px;margin-top:8px;"></p>
+    <p><b>Product Images (up to 4)</b></p>
+    <input type="file" id="prodImage" accept="image/*" multiple style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <p id="currentImage" style="display:none;"><b>Current Images:</b><br><div id="currentImgPreview" style="display:flex;gap:10px;flex-wrap:wrap;"></div></p>
     <p><b>Featured Product</b></p>
     <select id="prodFeatured" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
       <option value="false">No</option>
@@ -227,9 +227,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('prodCategory').value = product.category || 'handbag';
     document.getElementById('prodDesc').value = product.description || '';
     document.getElementById('prodFeatured').value = product.featured ? 'true' : 'false';
-    if (product.image) {
+    document.getElementById('prodImage').value = '';
+    if (product.images && product.images.length > 0) {
       document.getElementById('currentImage').style.display = 'block';
-      document.getElementById('currentImgPreview').src = product.image;
+      var previewDiv = document.getElementById('currentImgPreview');
+      previewDiv.innerHTML = '';
+      product.images.slice(0, 4).forEach(function(img) {
+        previewDiv.innerHTML += '<img src="' + img + '" style="width:100px;height:100px;object-fit:cover;border-radius:10px;">';
+      });
+    } else if (product.image) {
+      document.getElementById('currentImage').style.display = 'block';
+      var previewDiv = document.getElementById('currentImgPreview');
+      previewDiv.innerHTML = '<img src="' + product.image + '" style="width:100px;height:100px;object-fit:cover;border-radius:10px;">';
     } else {
       document.getElementById('currentImage').style.display = 'none';
     }
@@ -244,22 +253,21 @@ document.addEventListener('DOMContentLoaded', function() {
       var category = document.getElementById('prodCategory').value;
       var description = document.getElementById('prodDesc').value.trim();
       var featured = document.getElementById('prodFeatured').value === 'true';
-      var imageFile = document.getElementById('prodImage').files[0];
+      var imageFiles = document.getElementById('prodImage').files;
 
       if (!name || !price || price <= 0) {
         alert('Please fill all required fields with valid values');
         return;
       }
 
-      var imageData = '';
-      var saveProductCallback = function() {
+      var saveProductCallback = function(images) {
         var products = getProducts();
         if (!Array.isArray(products)) products = [];
 
         if (editId) {
           var index = products.findIndex(function(p) { return String(p.id) === String(editId); });
           if (index === -1) { alert('Product not found!'); return; }
-          var existingImage = products[index].image || '';
+          var existingImages = products[index].images || (products[index].image ? [products[index].image] : []);
           products[index] = {
             id: Number(editId),
             name: name,
@@ -267,7 +275,8 @@ document.addEventListener('DOMContentLoaded', function() {
             category: category,
             description: description,
             featured: featured,
-            image: imageData || existingImage
+            images: images.length > 0 ? images : existingImages,
+            image: images.length > 0 ? images[0] : (existingImages[0] || '')
           };
         } else {
           var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return Number(p.id) || 0; })) + 1 : 1;
@@ -278,7 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
             category: category,
             description: description,
             featured: featured,
-            image: imageData
+            images: images,
+            image: images.length > 0 ? images[0] : ''
           });
         }
 
@@ -288,19 +298,31 @@ document.addEventListener('DOMContentLoaded', function() {
         loadProducts();
       };
 
-      if (imageFile) {
-        var reader = new FileReader();
-        reader.onload = function() {
-          imageData = reader.result;
-          saveProductCallback();
-        }
-        reader.onerror = function(err) {
-          console.error('Image read failed:', err);
-          alert('Image processing failed');
-        }
-        reader.readAsDataURL(imageFile);
+      // Process images
+      var imageFilesArray = Array.from(imageFiles).slice(0, 4);
+      if (imageFilesArray.length > 0) {
+        var images = [];
+        var processed = 0;
+        imageFilesArray.forEach(function(file) {
+          var reader = new FileReader();
+          reader.onload = function() {
+            images.push(reader.result);
+            processed++;
+            if (processed === imageFilesArray.length) {
+              saveProductCallback(images);
+            }
+          }
+          reader.onerror = function(err) {
+            console.error('Image read failed:', err);
+            processed++;
+            if (processed === imageFilesArray.length) {
+              saveProductCallback(images);
+            }
+          }
+          reader.readAsDataURL(file);
+        });
       } else {
-        saveProductCallback();
+        saveProductCallback([]);
       }
     } catch (err) {
       console.error('Save product error:', err);
