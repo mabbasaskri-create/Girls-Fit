@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>👩‍💼 Admin Panel - Girls Fit</title>
+<title>Admin Panel - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -14,20 +14,51 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
+<script>
+// Define admin page functions early so nav links work
+window.showAdminPage = function(page) {
+  var pages = document.getElementsByClassName('admin-page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].style.display = 'none';
+  }
+  var navs = document.getElementsByTagName('nav')[0].getElementsByTagName('a');
+  for (var j = 0; j < navs.length; j++) {
+    navs[j].classList.remove('active');
+  }
+  var adminPage = document.getElementById('admin-' + page);
+  if (adminPage) adminPage.style.display = 'block';
+  var navLink = document.getElementById('nav-' + page);
+  if (navLink) navLink.classList.add('active');  
+  
+  if (page === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
+  if (page === 'products' && typeof loadProducts === 'function') loadProducts();
+  if (page === 'orders' && typeof loadOrders === 'function') loadOrders();
+}
+
+// Setup nav links after DOM loaded
+document.addEventListener('DOMContentLoaded', function() {
+  var navDashboard = document.getElementById('nav-dashboard');
+  var navProducts = document.getElementById('nav-products');
+  var navOrders = document.getElementById('nav-orders');
+  if (navDashboard) navDashboard.addEventListener('click', function() { showAdminPage('dashboard'); });
+  if (navProducts) navProducts.addEventListener('click', function() { showAdminPage('products'); });
+  if (navOrders) navOrders.addEventListener('click', function() { showAdminPage('orders'); });
+});
+</script>
 </head>
 <body>
 
 <header style="position:relative;">
   <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
   <div class="dropdown-menu" id="dropdownMenu"></div>
-  <h1>💖 Girls Fit 💖</h1>
+  <h1>Girls Fit</h1>
   <div id="firebaseStatus" style="position:absolute;top:5px;right:10px;font-size:0.8em;padding:5px 10px;border-radius:10px;background:#ffc1d6;">
-    🔄 Checking Firebase...
+    Checking Firebase...
   </div>
   <nav>
-    <a href="javascript:void(0)" onclick="showAdminPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
-    <a href="javascript:void(0)" onclick="showAdminPage('products')" id="nav-products">All Products</a>
-    <a href="javascript:void(0)" onclick="showAdminPage('orders')" id="nav-orders">All Orders</a>
+    <a href="javascript:void(0)" id="nav-dashboard" class="active">Dashboard</a>
+    <a href="javascript:void(0)" id="nav-products">All Products</a>
+    <a href="javascript:void(0)" id="nav-orders">All Orders</a>
     <a href="index.html">View Site</a>
     <a href="javascript:void(0)" onclick="firebaseLogout()" style="background:#ff5c8a;">Logout</a>
   </nav>
@@ -35,7 +66,7 @@
 
 <!-- Dashboard -->
 <div id="admin-dashboard" class="admin-page" style="padding:40px 20px;max-width:1100px;margin:auto;">
-  <h2>📊 Dashboard</h2>
+  <h2>Dashboard</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;margin:30px 0;">
     <div class="policy-box" style="text-align:center;">
       <h3 style="color:#ff5c8a;">Total Products</h3>
@@ -59,10 +90,10 @@
 <!-- Products Management -->
 <div id="admin-products" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
-    <h2>📦 All Products</h2>
+    <h2>All Products</h2>
     <div>
-      <button onclick="clearAllProducts()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🗑️ Clear All</button>
-      <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 Sync to Firebase</button>
+      <button onclick="clearAllProducts()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">Clear All</button>
+      <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">Sync to Firebase</button>
       <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
     </div>
   </div>
@@ -108,8 +139,8 @@
 <!-- Orders Management -->
 <div id="admin-orders" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
-    <h2>📦 All Orders</h2>
-    <button onclick="syncOrdersToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">🔄 Sync to Firebase</button>
+    <h2>All Orders</h2>
+    <button onclick="syncOrdersToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">Sync to Firebase</button>
   </div>
   <table>
     <thead>
@@ -120,7 +151,6 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
   // Check admin access
   function checkAdminAccess(user) {
     if (!user || user.email !== 'm.abbas.askri@gmail.com') {
@@ -129,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     return true;
   }
-
+  
   // Update profile icon
   function updateProfileIcon(user) {
     var icon = document.getElementById('profileIcon');
@@ -138,8 +168,8 @@ document.addEventListener('DOMContentLoaded', function() {
       icon.innerText = '👤';
       icon.title = user.email;
       dropdown.innerHTML =
-        '<a href="admin.html">👩‍💼 Admin Panel</a>' +
-        '<a href="javascript:void(0)" onclick="firebaseLogout()">🚪 Logout</a>';
+        '<a href="admin.html">Admin Panel</a>' +
+        '<a href="javascript:void(0)" onclick="firebaseLogout()">Logout</a>';
     }
   }
 
@@ -156,26 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-
-  // Show admin page
-  window.showAdminPage = function(page) {
-    var pages = document.getElementsByClassName('admin-page');
-    for (var i = 0; i < pages.length; i++) {
-      pages[i].style.display = 'none';
-    }
-    var navs = document.getElementsByTagName('nav')[0].getElementsByTagName('a');
-    for (var j = 0; j < navs.length; j++) {
-      navs[j].classList.remove('active');
-    }
-
-    document.getElementById('admin-' + page).style.display = 'block';
-    document.getElementById('nav-' + page).classList.add('active');
-
-    if (page === 'dashboard') loadDashboard();
-    if (page === 'products') loadProducts();
-    if (page === 'orders') loadOrders();
-  }
-
+  
   // Dashboard
   function loadDashboard() {
     var products = getProducts();
@@ -185,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('dashPouches').innerText = products.filter(function(p) { return p.category === 'pouch'; }).length;
     document.getElementById('dashOrders').innerText = orders.length;
   }
-
+  
   // Products
   function loadProducts() {
     var products = getProducts();
@@ -207,8 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
           '<td>' + (p.name || '') + '</td>' +
           '<td style="max-width:200px;font-size:0.9em;color:#666;">' + desc + '</td>' +
           '<td>₨' + (p.price || 0) + '</td>' +
-          '<td>' + (p.category === 'handbag' ? '👜 Handbag' : '💄 Pouch') + '</td>' +
-          '<td>' + (p.featured ? '✅' : '❌') + '</td>' +
+          '<td>' + (p.category === 'handbag' ? 'Handbag' : 'Pouch') + '</td>' +
+          '<td>' + (p.featured ? 'Yes' : 'No') + '</td>' +
           '<td>' +
             '<button onclick="editProduct(' + p.id + ')" style="background:#2196F3;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
             '<button onclick="deleteProduct(' + p.id + ')" style="background:#f44336;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;">Delete</button>' +
@@ -216,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '</tr>';
     });
   }
-
+  
   window.showAddProduct = function() {
     document.getElementById('formTitle').innerText = 'Add New Product';
     document.getElementById('editId').value = '';
@@ -229,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('currentImage').style.display = 'none';
     document.getElementById('productForm').style.display = 'block';
   }
-
+  
   window.editProduct = function(id) {
     var products = getProducts();
     var product = products.find(function(p) { return p.id === id; });
@@ -258,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById('productForm').style.display = 'block';
   }
-
+  
   window.saveProduct = function() {
     try {
       var editId = document.getElementById('editId').value;
@@ -268,16 +279,16 @@ document.addEventListener('DOMContentLoaded', function() {
       var description = document.getElementById('prodDesc').value.trim();
       var featured = document.getElementById('prodFeatured').value === 'true';
       var imageFiles = document.getElementById('prodImage').files;
-
+      
       if (!name || !price || price <= 0) {
         alert('Please fill all required fields with valid values');
         return;
       }
-
+      
       var saveProductCallback = function(images) {
         var products = getProducts();
         if (!Array.isArray(products)) products = [];
-
+        
         if (editId) {
           var index = products.findIndex(function(p) { return String(p.id) === String(editId); });
           if (index === -1) { alert('Product not found!'); return; }
@@ -305,17 +316,15 @@ document.addEventListener('DOMContentLoaded', function() {
             image: images.length > 0 ? images[0] : ''
           });
         }
-
+        
         // Save to localStorage ONLY (no auto-sync)
         localStorage.setItem('products', JSON.stringify(products));
-
-        // Ask user to sync
-        alert('✅ Product saved locally!\n\nClick "🔄 Sync to Firebase" button to share with all devices.');
+        alert('Product saved locally!\nClick "Sync to Firebase" button to share with all devices.');
         cancelProduct();
         loadProducts();
         loadDashboard();
       };
-
+      
       // Process images
       var imageFilesArray = Array.from(imageFiles).slice(0, 4);
       if (imageFilesArray.length > 0) {
@@ -347,79 +356,93 @@ document.addEventListener('DOMContentLoaded', function() {
       alert('Error saving product: ' + (err.message || err));
     }
   }
-
+  
   window.cancelProduct = function() {
     document.getElementById('productForm').style.display = 'none';
   }
-
+  
   window.deleteProduct = function(id) {
     if (!confirm('Are you sure you want to delete this product?')) return;
     var products = getProducts();
     products = products.filter(function(p) { return p.id !== id; });
     localStorage.setItem('products', JSON.stringify(products));
-
-    // Sync to Firebase
+    
+    // Sync to Firestore
     if (window.firebaseDB) {
-      window.firebaseDB.ref('products').set(products)
-        .then(function() {
-          alert('✅ Product deleted & synced!');
-          loadProducts();
-          loadDashboard();
-        })
-        .catch(function(err) {
-          console.error('Firebase sync error:', err);
-          loadProducts();
-          loadDashboard();
+      var productsRef = window.firebaseDB.collection('products');
+      productsRef.get().then(function(snapshot) {
+        var deletePromises = [];
+        snapshot.forEach(function(doc) {
+          deletePromises.push(doc.ref.delete());
         });
+        return Promise.all(deletePromises);
+      }).then(function() {
+        var addPromises = products.map(function(product, index) {
+          return productsRef.doc(String(index)).set(product);
+        });
+        return Promise.all(addPromises);
+      }).then(function() {
+        alert('Product deleted & synced!');
+        loadProducts();
+        loadDashboard();
+      }).catch(function(err) {
+        console.error('Firestore sync error:', err);
+        loadProducts();
+        loadDashboard();
+      });
     } else {
       loadProducts();
       loadDashboard();
     }
   }
-
+  
   // Clear all products
   window.clearAllProducts = function() {
-    if (!confirm('⚠️ This will DELETE ALL PRODUCTS permanently!\n\nAre you sure you want to continue?')) return;
-    if (!confirm('🚨 Final warning: This cannot be undone!\n\nDelete ALL products?')) return;
+    if (!confirm('This will DELETE ALL PRODUCTS permanently!\nAre you sure you want to continue?')) return;
+    if (!confirm('Final warning: This cannot be undone!\nDelete ALL products?')) return;
     
     // Clear from localStorage
     localStorage.setItem('products', JSON.stringify([]));
     
-    // Clear from Firebase Realtime Database
+    // Clear from Firestore
     if (window.firebaseDB) {
-      window.firebaseDB.ref('products').remove()
-        .then(function() {
-          alert('✅ All products cleared from localStorage AND Firebase!');
-          loadProducts();
-          loadDashboard();
-        })
-        .catch(function(err) {
-          console.error('Clear products error:', err);
-          alert('Products cleared from localStorage, but Firebase clear failed: ' + (err.message || err));
-          loadProducts();
-          loadDashboard();
+      var productsRef = window.firebaseDB.collection('products');
+      productsRef.get().then(function(snapshot) {
+        var deletePromises = [];
+        snapshot.forEach(function(doc) {
+          deletePromises.push(doc.ref.delete());
         });
+        return Promise.all(deletePromises);
+      }).then(function() {
+        alert('All products cleared from localStorage AND Firebase!');
+        loadProducts();
+        loadDashboard();
+      }).catch(function(err) {
+        console.error('Clear products error:', err);
+        alert('Products cleared from localStorage, but Firebase clear failed: ' + (err.message || err));
+        loadProducts();
+        loadDashboard();
+      });
     } else {
-      alert('✅ All products cleared from localStorage! (Firebase not connected)');
+      alert('All products cleared from localStorage! (Firebase not connected)');
       loadProducts();
       loadDashboard();
     }
   }
-
+  
   // Sync products to Firebase manually
   window.syncProductsToFirebase = function() {
     var products = getProducts();
-    console.log('🔄 Attempting to sync products:', products.length, 'products');
-    console.log('🔍 window.firebaseDB exists?', !!window.firebaseDB);
+    console.log('Attempting to sync products:', products.length, 'products');
+    console.log('window.firebaseDB exists?', !!window.firebaseDB);
     
     if (!window.firebaseDB) {
-      alert('❌ Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
+      alert('Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
       window.open('https://console.firebase.google.com/project/girls-fit-e5735/firestore');
       return;
     }
     
     // Firestore: save products
-    var batch = window.firebaseDB.batch();
     var productsRef = window.firebaseDB.collection('products');
     
     // First clear existing, then add new
@@ -436,32 +459,16 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       return Promise.all(addPromises);
     }).then(function() {
-      console.log('✅ Products synced to Firestore successfully!');
-      alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
+      console.log('Products synced to Firestore successfully!');
+      alert('Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
       loadProducts();
       loadDashboard();
     }).catch(function(err) {
-      console.error('❌ Sync error:', err);
-      alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
+      console.error('Sync error:', err);
+      alert('Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
     });
   }
-    console.log('Syncing products to Firebase:', products.length, 'products');
-    if (products.length === 0) {
-      if (!confirm('No products found locally. Do you want to clear Firebase too?')) return;
-    }
-    window.firebaseDB.ref('products').set(products)
-      .then(function() {
-        alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
-        console.log('Products synced:', products.length);
-        loadProducts();
-        loadDashboard();
-      })
-      .catch(function(err) {
-        console.error('Sync error:', err);
-        alert('❌ Sync failed: ' + (err.message || err) + '\n\nMake sure Realtime Database is created in Firebase Console.');
-      });
-  }
-
+  
   // Orders
   function loadOrders() {
     var orders = getOrders();
@@ -494,46 +501,56 @@ document.addEventListener('DOMContentLoaded', function() {
         '</tr>';
     });
   }
-
+  
   function getStatusText(status) {
     switch(status) {
-      case 'pending': return 'Pending 📋';
-      case 'processing': return 'Processing ⏳';
-      case 'shipped': return 'Shipped 🚚';
-      case 'delivered': return 'Delivered ✅';
-      case 'cancelled': return 'Cancelled ❌';
+      case 'pending': return 'Pending';
+      case 'processing': return 'Processing';
+      case 'shipped': return 'Shipped';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
       default: return status || 'Pending';
     }
   }
-
+  
   window.updateOrderStatus = function(orderId, newStatus) {
     var orders = getOrders();
     var index = orders.findIndex(function(o) { return o.id == orderId; });
     if (index !== -1) {
       orders[index].status = newStatus;
       localStorage.setItem('orders', JSON.stringify(orders));
-
-      // Sync to Firebase
+      
+      // Sync to Firestore
       if (window.firebaseDB) {
-        window.firebaseDB.ref('orders').set(orders)
-          .then(function() {
-            loadOrders();
-          })
-          .catch(function(err) {
-            console.error('Firebase sync error:', err);
-            loadOrders();
+        var ordersRef = window.firebaseDB.collection('orders');
+        ordersRef.get().then(function(snapshot) {
+          var deletePromises = [];
+          snapshot.forEach(function(doc) {
+            deletePromises.push(doc.ref.delete());
           });
+          return Promise.all(deletePromises);
+        }).then(function() {
+          var addPromises = orders.map(function(order, idx) {
+            return ordersRef.doc(String(idx)).set(order);
+          });
+          return Promise.all(addPromises);
+        }).then(function() {
+          loadOrders();
+        }).catch(function(err) {
+          console.error('Firestore sync error:', err);
+          loadOrders();
+        });
       } else {
         loadOrders();
       }
     }
   }
-
+  
   // Sync orders to Firebase manually
   window.syncOrdersToFirebase = function() {
     var orders = getOrders();
     if (!window.firebaseDB) {
-      alert('❌ Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
+      alert('Firebase Firestore NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Firestore Database"\n3. Make sure Database is created\n4. Check Security Rules (set to test mode)');
       window.open('https://console.firebase.google.com/project/girls-fit-e5735/firestore');
       return;
     }
@@ -553,21 +570,21 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       return Promise.all(addPromises);
     }).then(function() {
-      console.log('✅ Orders synced to Firestore successfully!');
-      alert('✅ Orders synced to Firebase successfully!');
+      console.log('Orders synced to Firestore successfully!');
+      alert('Orders synced to Firebase successfully!');
       loadOrders();
     }).catch(function(err) {
-      console.error('❌ Orders sync error:', err);
-      alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
+      console.error('Orders sync error:', err);
+      alert('Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
     });
   }
-
+  
   window.firebaseLogout = function() {
     firebase.auth().signOut().then(function() {
       window.location.href = "login.html";
     });
   }
-
+  
   // Auth handling
   var authHandled = false;
   firebase.auth().onAuthStateChanged(function(user) {
@@ -586,18 +603,18 @@ document.addEventListener('DOMContentLoaded', function() {
           window.firebaseDB.collection('products').limit(1).get()
             .then(function() {
               var statusDiv = document.getElementById('firebaseStatus');
-              statusDiv.innerHTML = '✅ Firebase Connected';
+              statusDiv.innerHTML = 'Firebase Connected';
               statusDiv.style.background = '#c8e6c9';
             })
             .catch(function(err) {
               var statusDiv = document.getElementById('firebaseStatus');
-              statusDiv.innerHTML = '⚠️ Firebase Error';
+              statusDiv.innerHTML = 'Firebase Error';
               statusDiv.style.background = '#ffcdd2';
               console.error('Firestore connection error:', err);
             });
         } else {
           var statusDiv = document.getElementById('firebaseStatus');
-          statusDiv.innerHTML = '❌ Firebase Not Initialized';
+          statusDiv.innerHTML = 'Firebase Not Initialized';
           statusDiv.style.background = '#ffcdd2';
         }
       }, 2000);
@@ -618,7 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 1500);
     }
   });
-});
 </script>
 
 <!-- WhatsApp Floating Button -->

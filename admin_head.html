@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>👩‍💼 Admin Panel - Girls Fit</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+// Define admin page functions early so nav links work
+window.showAdminPage = function(page) {
+  var pages = document.getElementsByClassName('admin-page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].style.display = 'none';
+  }
+  var navs = document.getElementsByTagName('nav')[0].getElementsByTagName('a');
+  for (var j = 0; j < navs.length; j++) {
+    navs[j].classList.remove('active');
+  }
+  var adminPage = document.getElementById('admin-' + page);
+  if (adminPage) adminPage.style.display = 'block';
+  var navLink = document.getElementById('nav-' + page);
+  if (navLink) navLink.classList.add('active');  
+  
+  if (page === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
+  if (page === 'products' && typeof loadProducts === 'function') loadProducts();
+  if (page === 'orders' && typeof loadOrders === 'function') loadOrders();
+}
+
+// Setup nav links after DOM loaded
+document.addEventListener('DOMContentLoaded', function() {
+  var navDashboard = document.getElementById('nav-dashboard');
+  var navProducts = document.getElementById('nav-products');
+  var navOrders = document.getElementById('nav-orders');  
+  if (navDashboard) navDashboard.addEventListener('click', function() { showAdminPage('dashboard'); });
+  if (navProducts) navProducts.addEventListener('click', function() { showAdminPage('products'); });
+  if (navOrders) navOrders.addEventListener('click', function() { showAdminPage('orders'); });
+});
+</script>
+</head>
