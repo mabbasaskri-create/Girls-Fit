@@ -31,19 +31,11 @@
 </header>
 
 <!-- Banner Section -->
-<section class="banner" id="homeBanner" style="position:relative;text-align:center;padding:60px 20px;background:linear-gradient(135deg,#ff8ab3,#ffc1d6);color:white;overflow:hidden;">
-  <div id="bannerContent">
-    <h2 style="font-size:3em;margin-bottom:10px;">💖 Girls Fit 💖</h2>
-    <p style="font-size:1.3em;margin-bottom:20px;">Your one-stop shop for trendy handbags & makeup pouches</p>
-    <a href="handbags.html" style="background:white;color:#ff5c8a;padding:12px 30px;border-radius:25px;text-decoration:none;font-weight:bold;margin:5px;display:inline-block;">Shop Handbags</a>
-    <a href="pouches.html" style="background:white;color:#ff5c8a;padding:12px 30px;border-radius:25px;text-decoration:none;font-weight:bold;margin:5px;display:inline-block;">Shop Pouches</a>
-  </div>
-</section>
-<!-- Banners Section (like Collections/Featured) -->
-<section id="bannersSection" class="products" style="display:none;">
-  <h2>🖼️ Featured Banners</h2>
-  <div class="product-grid" id="bannersGrid"></div>
-</section>
+    <section class="hero">
+      <h2>Welcome to Girls Fit!</h2>
+      <p>Your one-stop shop for trendy handbags & makeup pouches 💕</p>
+    </section>
+
 
 <!-- Collections Section -->
 <section class="collections" style="padding:40px 20px;max-width:1100px;margin:auto;">
@@ -241,18 +233,7 @@ function loadReviews() {
   });
 }
 
-// Load all banners from localStorage (show like Collections/Featured)
-function loadBanners() {
-  try {
-    var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-    var grid = document.getElementById('bannersGrid');
-    var section = document.getElementById('bannersSection');
-    if (!grid || !section) return;
-    grid.innerHTML = '';
-    if (!banners.length) {
-      section.style.display = 'none';
-      return;
-    }
+
     section.style.display = 'block';
     banners.forEach(function(b, idx) {
       var imgTag = b.imageUrl
@@ -304,8 +285,6 @@ window.addToCart = function(name, price) {
 // Load products on page load (no auth required for viewing)
 loadFeaturedProducts();
 loadReviews();
-loadActiveBanner();
-loadBanners();
 
 // Auth handling for nav/profile updates
 var authHandled = false;

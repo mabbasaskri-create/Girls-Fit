@@ -20,7 +20,6 @@
     <a href="javascript:void(0)" onclick="showAdminPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
     <a href="javascript:void(0)" onclick="showAdminPage('products')" id="nav-products">All Products</a>
     <a href="javascript:void(0)" onclick="showAdminPage('orders')" id="nav-orders">All Orders</a>
-    <a href="javascript:void(0)" onclick="showAdminPage('banners')" id="nav-banners">Banners</a>
     <a href="index.html">View Site</a>
     <a href="javascript:void(0)" onclick="firebaseLogout()" style="background:#ff5c8a;">Logout</a>
   </nav>
@@ -105,31 +104,7 @@
   </table>
 </div>
 
-<!-- Banner Management -->
-<div id="admin-banners" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
-  <h2>🖼️ Banner Management</h2>
 
-  <!-- Add Banner Form -->
-  <div class="policy-box" style="margin-bottom:30px;">
-    <h3 id="bannerFormTitle">Add New Banner</h3>
-    <input type="hidden" id="editBannerIndex" value="-1">
-    <p><b>Banner Title</b></p>
-    <input type="text" id="bannerTitle" placeholder="Girls Fit" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p><b>Banner Subtitle</b></p>
-    <input type="text" id="bannerSubtitle" placeholder="Your one-stop shop" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p><b>Banner Image</b></p>
-    <input type="file" id="bannerImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
-    <p id="currentBannerPreview" style="display:none;"><b>Current Image:</b><br><img id="currentBannerImg" style="max-width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-top:8px;"></p>
-    <div style="margin-top:15px;">
-      <button onclick="saveBanner()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">Save Banner</button>
-      <button onclick="cancelBanner()" style="background:#ccc;color:#333;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Banners List -->
-  <h3>All Banners</h3>
-  <div id="bannersList"></div>
-</div>
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
@@ -168,7 +143,6 @@ function showAdminPage(page) {
   if (page === 'dashboard') loadDashboard();
   if (page === 'products') loadProducts();
   if (page === 'orders') loadOrders();
-  if (page === 'banners') loadBanners();
 }
 
 // ==================== DASHBOARD ====================
@@ -377,107 +351,7 @@ function updateOrderStatus(orderId, newStatus) {
   }
 }
 
-// ==================== BANNERS ====================
-function loadBanners() {
-  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-  var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
-  var container = document.getElementById('bannersList');
-  container.innerHTML = '';
-
-  if (!banners.length) {
-    container.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">No banners yet. Use the form above to add one.</p>';
-    return;
-  }
-
-  banners.forEach(function(banner, index) {
-    var isActive = activeBanner && activeBanner.updatedAt === banner.updatedAt;
-    var imgTag = banner.imageUrl
-      ? '<div style="width:300px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;background:#fff0f5;">' +
-            '<img src="' + banner.imageUrl + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';">' +
-          '</div>'
-      : '<div style="width:300px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff0f5;border-radius:10px;color:#ccc;">No Image</div>';
-    container.innerHTML +=
-      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;border-left:4px solid ' + (isActive ? '#4caf50' : '#ffc1d6') + ';">' +
-        imgTag +
-        '<div style="flex:1;">' +
-          '<h3>' + (banner.title || 'No Title') + ' ' + (isActive ? '<span style="background:#4caf50;color:white;padding:4px 10px;border-radius:10px;font-size:0.8em;font-weight:bold;">✅ Active</span>' : '') + '</h3>' +
-          '<p style="color:#666;">' + (banner.subtitle || 'No Subtitle') + '</p>' +
-          '<p style="color:#888;font-size:0.9em;">Updated: ' + (banner.updatedAt ? new Date(banner.updatedAt).toLocaleDateString() : 'Unknown') + '</p>' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:8px;">' +
-          (isActive ? '<span style="background:#4caf50;color:white;padding:6px 16px;border-radius:10px;text-align:center;font-size:0.9em;font-weight:bold;">✅ Active</span>' : '<button onclick="setActiveBanner(' + index + ')" style="background:#4caf50;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Set as Active</button>') +
-          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Edit</button>' +
-          '<button onclick="deleteBanner(' + index + ')" style="background:#f44336;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Delete</button>' +
-        '</div>' +
-      '</div>';
-  });
-}
-
-  banners.forEach(function(banner, index) {
-    var isActive = activeBanner && activeBanner.updatedAt === banner.updatedAt;
-    container.innerHTML +=
-      '<div class="policy-box" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;border-left:4px solid ' + (isActive ? '#4caf50' : '#ffc1d6') + ';">' +
-        '<img src="' + (banner.imageUrl || '') + '" style="width:300px;height:150px;object-fit:cover;border-radius:10px;" onerror="this.onerror=null;this.style.display=\'none\';">' +
-        '<div style="flex:1;">' +
-          '<h3>' + (banner.title || 'No Title') + ' ' + (isActive ? '<span style="background:#4caf50;color:white;padding:4px 10px;border-radius:10px;font-size:0.8em;">ACTIVE</span>' : '') + '</h3>' +
-          '<p style="color:#666;">' + (banner.subtitle || 'No Subtitle') + '</p>' +
-          '<p style="color:#888;font-size:0.9em;">Updated: ' + (banner.updatedAt ? new Date(banner.updatedAt).toLocaleDateString() : 'Unknown') + '</p>' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:8px;">' +
-          (isActive ? '<span style="background:#4caf50;color:white;padding:6px 12px;border-radius:10px;text-align:center;font-size:0.9em;font-weight:bold;">✅ Active</span>' : '<button onclick="setActiveBanner(' + index + ')" style="background:#4caf50;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Set as Active</button>') +
-          '<button onclick="editBanner(' + index + ')" style="background:#2196f3;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Edit</button>' +
-          '<button onclick="deleteBanner(' + index + ')" style="background:#f44336;color:white;border:none;padding:8px 16px;border-radius:15px;cursor:pointer;">Delete</button>' +
-        '</div>' +
-      '</div>';
-  });
-}
-
-function editBanner(index) {
-  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-  if (!banners[index]) { alert('Banner not found!'); return; }
-  var banner = banners[index];
-  document.getElementById('bannerFormTitle').innerText = 'Edit Banner';
-  document.getElementById('editBannerIndex').value = index;
-  document.getElementById('bannerTitle').value = banner.title || '';
-  document.getElementById('bannerSubtitle').value = banner.subtitle || '';
-  if (banner.imageUrl) {
-    document.getElementById('currentBannerPreview').style.display = 'block';
-    document.getElementById('currentBannerImg').src = banner.imageUrl;
-  } else {
-    document.getElementById('currentBannerPreview').style.display = 'none';
-  }
-  // Scroll to form
-  document.getElementById('bannerFormTitle').scrollIntoView({ behavior: 'smooth' });
-}
-
-window.saveBanner = async function() {
-  try {
-    var editIndex = parseInt(document.getElementById('editBannerIndex').value);
-    var title = document.getElementById('bannerTitle').value.trim();
-    var subtitle = document.getElementById('bannerSubtitle').value.trim();
-    var imageFile = document.getElementById('bannerImage').files[0];
-
-    var imageData = '';
-    if (imageFile) {
-      try {
-        imageData = await new Promise(function(resolve, reject) {
-          var reader = new FileReader();
-          reader.onload = function() { resolve(reader.result); };
-          reader.onerror = reject;
-          reader.readAsDataURL(imageFile);
-        });
-      } catch (err) {
-        console.error('Banner image read failed:', err);
-        alert('Image processing failed: ' + (err.message || err));
-      }
-    }
-
-    var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-    var bannerData = {
-      title: title || '',
-      subtitle: subtitle || '',
-      updatedAt: new Date().toISOString()
-    };
+// (Banner functions removed as requested)
 
     if (editIndex >= 0 && banners[editIndex]) {
       // Edit existing
