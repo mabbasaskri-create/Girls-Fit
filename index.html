@@ -64,10 +64,10 @@
   <div class="product-grid" id="featuredProducts"></div>
 </section>
 
-<!-- Fake Reviews Section -->
+<!-- Customer Reviews -->
 <section class="reviews" style="padding:40px 20px;max-width:1100px;margin:auto;background:#fff0f5;">
   <h2 style="text-align:center;color:#ff5c8a;margin-bottom:30px;font-size:2em;">⭐ Customer Reviews</h2>
-  <div class="product-grid" id="reviewsGrid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));"></div>
+  <div class="product-grid" id="reviewsGrid" style="grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));"></div>
 </section>
 
 <!-- Why Choose Us -->
@@ -190,8 +190,10 @@ function loadFeaturedProducts() {
     }
     featured.forEach(function(p) {
       var imgTag = p.image
-        ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;" onerror="this.onerror=null;this.style.display=\'none\';">'
-        : '';
+        ? '<div style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;margin-bottom:10px;background:#fff0f5;">' +
+            '<img src="' + p.image + '" alt="' + p.name + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+          '</div>'
+        : '<div style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;background:#fff0f5;border-radius:10px;margin-bottom:10px;color:#ccc;">No Image</div>';
       var safeName = (p.name || '').replace(/'/g, "\\'");
       container.innerHTML +=
         '<div class="product-card">' +
@@ -206,51 +208,7 @@ function loadFeaturedProducts() {
   }
 }
 
-// Fake reviews data
-var fakeReviews = [
-  { name: "Ayesha M.", rating: 5, text: "Absolutely love my new handbag! The quality is amazing and it arrived so fast. 💖", product: "Pink Tote Bag" },
-  { name: "Sana K.", rating: 5, text: "The makeup pouch is so cute and spacious. Perfect for organizing my makeup!", product: "Floral Pouch" },
-  { name: "Fatima R.", rating: 4, text: "Great quality sling bag. Gets so many compliments! Would buy again.", product: "Mini Sling Bag" },
-  { name: "Mariam S.", rating: 5, text: "Customer service was excellent. They helped me pick the perfect handbag.", product: "Heart Handbag" },
-  { name: "Zainab A.", rating: 5, text: "The bow makeup kit pouch is adorable! My daughter loves it too.", product: "Bow Makeup Kit" },
-  { name: "Hira T.", rating: 4, text: "Love the design and quality. Will definitely order more from Girls Fit!", product: "Cute Backpack" }
-];
 
-function loadReviews() {
-  var container = document.getElementById('reviewsGrid');
-  if (!container) return;
-  container.innerHTML = '';
-  fakeReviews.forEach(function(r) {
-    var stars = '';
-    for (var i = 0; i < r.rating; i++) stars += '⭐';
-    container.innerHTML +=
-      '<div class="policy-box">' +
-        '<div style="color:#ff5c8a;font-size:1.2em;margin-bottom:8px;">' + stars + '</div>' +
-        '<p style="font-style:italic;margin-bottom:10px;">"' + r.text + '"</p>' +
-        '<p style="color:#ff5c8a;font-weight:bold;">— ' + r.name + '</p>' +
-        '<p style="color:#888;font-size:0.9em;">Purchased: ' + r.product + '</p>' +
-      '</div>';
-  });
-}
-
-
-    section.style.display = 'block';
-    banners.forEach(function(b, idx) {
-      var imgTag = b.imageUrl
-        ? '<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;margin-bottom:10px;background:#fff0f5;">' +
-            '<img src="' + b.imageUrl + '" alt="Banner ' + (idx+1) + '" style="max-width:100%;max-height:100%;object-fit:contain;">' +
-          '</div>'
-        : '<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:#fff0f5;border-radius:10px;margin-bottom:10px;color:#ccc;">No Image</div>';
-      grid.innerHTML +=
-        '<div class="product-card">' +
-          imgTag +
-          '<h3>' + (b.title || 'Banner ' + (idx+1)) + '</h3>' +
-          '<p style="color:#888;font-size:0.9em;">' + (b.subtitle || 'No subtitle') + '</p>' +
-        '</div>';
-    });
-  } catch(err) {
-    console.error('loadBanners error:', err);
-  }
 }
 
 // Load active banner for main banner section
@@ -281,6 +239,33 @@ window.addToCart = function(name, price) {
   localStorage.setItem('cart', JSON.stringify(cart));
   alert("💖 " + name + " added to cart!");
 };
+
+// Fake reviews data
+var fakeReviews = [
+  { name: "Ayesha M.", rating: 5, text: "Absolutely love my new handbag! The quality is amazing and it arrived so fast. 💖", product: "Pink Tote Bag" },
+  { name: "Sana K.", rating: 5, text: "The makeup pouch is so cute and spacious. Perfect for organizing my makeup!", product: "Floral Pouch" },
+  { name: "Fatima R.", rating: 4, text: "Great quality sling bag. Gets so many compliments! Would buy again.", product: "Mini Sling Bag" },
+  { name: "Mariam S.", rating: 5, text: "Customer service was excellent. They helped me pick the perfect handbag.", product: "Heart Handbag" },
+  { name: "Zainab A.", rating: 5, text: "The bow makeup kit pouch is adorable! My daughter loves it too.", product: "Bow Makeup Kit" },
+  { name: "Hira T.", rating: 4, text: "Love the design and quality. Will definitely order more from Girls Fit!", product: "Cute Backpack" }
+];
+
+function loadReviews() {
+  var container = document.getElementById('reviewsGrid');
+  if (!container) return;
+  container.innerHTML = '';
+  fakeReviews.forEach(function(r) {
+    var stars = '';
+    for (var i = 0; i < r.rating; i++) stars += '⭐';
+    container.innerHTML +=
+      '<div class="policy-box">' +
+        '<div style="color:#ff5c8a;font-size:1.2em;margin-bottom:8px;">' + stars + '</div>' +
+        '<p style="font-style:italic;margin-bottom:10px;">"' + r.text + '"</p>' +
+        '<p style="color:#ff5c8a;font-weight:bold;">— ' + r.name + '</p>' +
+        '<p style="color:#888;font-size:0.9em;">Purchased: ' + r.product + '</p>' +
+      '</div>';
+  });
+}
 
 // Load products on page load (no auth required for viewing)
 loadFeaturedProducts();
