@@ -120,6 +120,8 @@ function handleAuth(user) {
   }
   window.currentFirebaseUser = user;
   updateProfileIcon(user);
+  // Load default page after auth
+  showAdminPage('dashboard');
 }
 
 firebase.auth().onAuthStateChanged(function(user) {
@@ -353,64 +355,6 @@ function updateOrderStatus(orderId, newStatus) {
 
 // (Banner functions removed as requested)
 
-    if (editIndex >= 0 && banners[editIndex]) {
-      // Edit existing
-      bannerData.imageUrl = imageData || banners[editIndex].imageUrl || '';
-      banners[editIndex] = bannerData;
-      // If this is the active banner being edited, update it
-      var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
-      if (activeBanner && activeBanner.updatedAt === banners[editIndex].updatedAt) {
-        localStorage.setItem('siteBanner', JSON.stringify(bannerData));
-      }
-    } else {
-      // Add new
-      bannerData.imageUrl = imageData || '';
-      banners.push(bannerData);
-    }
-
-    localStorage.setItem('siteBanners', JSON.stringify(banners));
-    alert('✅ Banner saved successfully!');
-    cancelBanner();
-    loadBanners();
-  } catch (err) {
-    console.error('Save banner error:', err);
-    alert('Error saving banner: ' + (err.message || err));
-  }
-};
-
-function cancelBanner() {
-  document.getElementById('bannerFormTitle').innerText = 'Add New Banner';
-  document.getElementById('editBannerIndex').value = '-1';
-  document.getElementById('bannerTitle').value = '';
-  document.getElementById('bannerSubtitle').value = '';
-  document.getElementById('bannerImage').value = '';
-  document.getElementById('currentBannerPreview').style.display = 'none';
-}
-
-window.deleteBanner = function(index) {
-  if (!confirm('Are you sure you want to delete this banner?')) return;
-  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-  banners.splice(index, 1);
-  localStorage.setItem('siteBanners', JSON.stringify(banners));
-  // If deleted banner was active, clear active banner
-  var activeBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
-  if (!activeBanner || !banners.find(function(b) { return b.updatedAt === activeBanner.updatedAt; })) {
-    localStorage.removeItem('siteBanner');
-  }
-  alert('✅ Banner deleted successfully!');
-  loadBanners();
-};
-
-// Set active banner (called from banner list)
-window.setActiveBanner = function(index) {
-  var banners = JSON.parse(localStorage.getItem('siteBanners')) || [];
-  if (banners[index]) {
-    localStorage.setItem('siteBanner', JSON.stringify(banners[index]));
-    alert('✅ Banner set as active! It will now show on the home page.');
-    loadBanners();
-  }
-};
-
 // ==================== AUTH/UI ====================
 window.firebaseLogout = function() {
   firebase.auth().signOut().then(function() {
@@ -455,8 +399,8 @@ window.signInWithGoogle = function() {
   window.location.href = 'login.html';
 };
 
-// Load dashboard by default
-showAdminPage('dashboard');
+// Load dashboard by default (called after auth check)
+// showAdminPage('dashboard'); // Removed - now called in handleAuth
 </script>
 
 </body>

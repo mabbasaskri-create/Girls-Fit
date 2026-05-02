@@ -10,6 +10,47 @@
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 </head>
+<body>
+
+<header style="position:relative;">
+  <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
+  <div class="dropdown-menu" id="dropdownMenu"></div>
+  <h1>💖 Girls Fit 💖</h1>
+  <nav id="navBar">
+    <a href="index.html">Home</a>
+    <a href="handbags.html">Handbags</a>
+    <a href="pouches.html">Makeup Pouches</a>
+    <a href="returns.html">Returns & Refunds</a>
+    <a href="orders.html">My Orders</a>
+    <a href="cart.html" class="active">🛒 Cart</a>
+  </nav>
+</header>
+
+<section class="products">
+  <h2>🛒 Your Cart</h2>
+  <p id="emptyCartMsg" style="text-align:center;color:#888;padding:20px;"></p>
+  <ul id="cartList" style="max-width:600px;margin:20px auto;list-style:none;padding:0;"></ul>
+  <p id="cartTotal" style="text-align:center;font-size:1.5em;font-weight:bold;color:#ff5c8a;"></p>
+
+  <div id="checkoutSection" style="display:none;max-width:500px;margin:30px auto;padding:30px;background:#fff0f5;border-radius:20px;">
+    <h3 style="text-align:center;color:#ff5c8a;margin-bottom:20px;">💖 Checkout Details</h3>
+    <form onsubmit="processPayment(event)">
+      <p><b>Full Name</b></p>
+      <input type="text" id="fullName" required placeholder="Enter your full name" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+      <p><b>Phone Number</b></p>
+      <input type="tel" id="phone" required placeholder="Enter your phone number" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+
+      <p><b>Delivery Address</b></p>
+      <textarea id="address" required placeholder="Enter your full address" rows="3" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;"></textarea>
+
+      <button type="submit" style="background:#ff8ab3;color:white;border:none;padding:14px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:1.1em;margin-top:15px;width:100%;">Place Order 💖</button>
+    </form>
+  </div>
+</section>
+
+<footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
+
 <script>
   // Firebase already initialized by firebase-config.js
 
