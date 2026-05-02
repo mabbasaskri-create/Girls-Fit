@@ -50,124 +50,13 @@
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
-<script>
-  // Firebase Configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDwdHkfb9DBVV5oLYw1WaEPfVN1_MYm30Y",
-    authDomain: "girls-67c84.firebaseapp.com",
-    projectId: "girls-67c84",
-    storageBucket: "girls-67c84.firebasestorage.app",
-    messagingSenderId: "87884221171",
-    appId: "1:87884221171:web:12f70ce888930fe1ab4586",
-    measurementId: "G-SRPHVVDZWK"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  // Google Sign In
-  window.signInWithGoogle = function() {
-    console.log("Google sign-in button clicked");
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    
-    auth.signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        window.currentFirebaseUser = user;
-        console.log("Sign-in success:", user.email);
-
-        if (user.email === 'm.abbas.askri@gmail.com') {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "index.html";
-        }
-      })
-      .catch((error) => {
-        console.error("Google sign-in error:", error);
-        const errorMsg = document.getElementById('errorMsg');
-        errorMsg.innerText = "Google sign-in failed: " + error.message;
-        errorMsg.style.display = 'block';
-      });
-  }
-
-  // Email input listener
-  document.getElementById('loginEmail').addEventListener('input', function() {
-    const adminNote = document.getElementById('adminNote');
-    if (this.value === 'm.abbas.askri@gmail.com') {
-      adminNote.style.display = 'block';
-    } else {
-      adminNote.style.display = 'none';
-    }
-  });
-
-  // Email/password login
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorMsg = document.getElementById('errorMsg');
-
-    if (!email || !password) {
-      errorMsg.innerText = "Please enter both email and password";
-      errorMsg.style.display = 'block';
-      return;
-    }
-
-    auth.signInWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        window.currentFirebaseUser = user;
-        console.log("Login success:", user.email);
-
-        if (user.email === 'm.abbas.askri@gmail.com') {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "index.html";
-        }
-      })
-      .catch((error) => {
-        console.error("Login error:", error);
-        errorMsg.innerText = "Login failed: " + error.message;
-        errorMsg.style.display = 'block';
-      });
-  });
-
-  // Auth handling that waits for persistence to restore before acting on null
-  let authHandled = false;
-  auth.onAuthStateChanged((user) => {
-    if (authHandled) return;
-    if (user) {
-      authHandled = true;
-      window.currentFirebaseUser = user;
-      console.log("User already logged in:", user.email);
-      if (user.email === 'm.abbas.askri@gmail.com') {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "index.html";
-      }
-    } else {
-      setTimeout(() => {
-        if (!authHandled) {
-          authHandled = true;
-          const persistedUser = auth.currentUser;
-          if (persistedUser) {
-            window.currentFirebaseUser = persistedUser;
-            console.log("User already logged in:", persistedUser.email);
-            if (persistedUser.email === 'm.abbas.askri@gmail.com') {
-              window.location.href = "admin.html";
-            } else {
-              window.location.href = "index.html";
-            }
-          }
-        }
-      }, 1500);
-    }
-  });
-</script>
+<!-- WhatsApp Floating Button -->
+<a href="https://wa.me/923256646684" target="_blank" class="whatsapp-float" title="Chat with us on WhatsApp">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.227 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.123-.272-.198-.57-.347z"/>
+    <path d="M20.52 3.48C18.34 1.1 15.31 0 12.03 0 5.46 0 .06 5.4.06 12c0 2.12.55 4.19 1.6 6.01L0 24l6.2-1.63c1.56.84 3.32 1.29 5.1 1.29h.1c6.58 0 11.98-5.4 11.98-12 0-3.2-1.25-6.21-3.52-8.48zM12.03 21.99h-.08c-1.71 0-3.39-.46-4.86-1.33l-.35-.2-3.68.96.98-3.58-.23-.37A9.87 9.87 0 0 1 2.1 12C2.1 6.58 6.56 2.12 12.03 2.12c2.66 0 5.16 1.04 7.04 2.92a9.87 9.87 0 0 1 2.9 7.03c0 5.42-4.46 9.92-10.94 9.92z"/>
+  </svg>
+</a>
 
 </body>
 </html>

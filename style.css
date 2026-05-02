@@ -29,8 +29,44 @@ header nav { margin-top:10px; }
 .dropdown-menu a:last-child { border-bottom:none; }
 .google-btn {
   display:flex; align-items:center; gap:10px; font-weight:bold;
-}
+ }
 .google-icon { font-size:1.2em; }
+
+/* WhatsApp Floating Button */
+.whatsapp-float {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #25D366;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+  cursor: pointer;
+  z-index: 9999;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  outline: none;
+}
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(37, 211, 102, 0.6), 0 0 20px rgba(37, 211, 102, 0.3);
+  background: #22c15e;
+}
+.whatsapp-float:active {
+  transform: scale(0.95);
+}
+.whatsapp-float svg {
+  width: 32px;
+  height: 32px;
+  fill: white;
+}
 nav a {
   color:white; margin:0 8px; text-decoration:none;
   font-weight:bold; padding:6px 14px; border-radius:20px;
