@@ -74,3 +74,39 @@ function generateOrderId() {
   const lastId = orders.length > 0 ? parseInt(orders[orders.length - 1].id?.slice(1) || 1000) : 1000;
   return `#${lastId + 1}`;
 }
+
+// Google Sign In
+window.signInWithGoogle = function() {
+  console.log("Google sign-in button clicked");
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  
+  firebase.auth().signInWithPopup(provider)
+    .then((result) => {
+      const user = result.user;
+      window.currentFirebaseUser = user;
+      console.log("Sign-in success:", user.email);
+      
+      if (user.email === 'm.abbas.askri@gmail.com') {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "index.html";
+      }
+    })
+    .catch((error) => {
+      console.error("Google sign-in error:", error);
+      alert("Google sign-in failed: " + error.message);
+    });
+}
+
+// Logout function
+window.logoutUser = function() {
+  firebase.auth().signOut().then(() => {
+    window.currentFirebaseUser = null;
+    window.location.href = "login.html";
+  }).catch((error) => {
+    console.error("Logout error:", error);
+  });
+}
