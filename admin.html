@@ -21,6 +21,9 @@
   <div class="profile-icon" id="profileIcon" onclick="toggleDropdown()" title="Sign In">👤</div>
   <div class="dropdown-menu" id="dropdownMenu"></div>
   <h1>💖 Girls Fit 💖</h1>
+  <div id="firebaseStatus" style="position:absolute;top:5px;right:10px;font-size:0.8em;padding:5px 10px;border-radius:10px;background:#ffc1d6;">
+    🔄 Checking Firebase...
+  </div>
   <nav>
     <a href="javascript:void(0)" onclick="showAdminPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
     <a href="javascript:void(0)" onclick="showAdminPage('products')" id="nav-products">All Products</a>
@@ -406,11 +409,42 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sync products to Firebase manually
   window.syncProductsToFirebase = function() {
     var products = getProducts();
+    console.log('🔄 Attempting to sync products:', products.length, 'products');
+    console.log('🔍 window.firebaseDB exists?', !!window.firebaseDB);
+    console.log('🔍 Firebase config:', firebaseConfig);
+    
     if (!window.firebaseDB) {
       alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
-      window.open('https://console.firebase.google.com/project/girls-67c84/database');
+      window.open('https://console.firebase.google.com/project/girls-fit-e5735/database');
       return;
     }
+    
+    // Test connection first
+    window.firebaseDB.ref('.info/connected').once('value').then(function(snap) {
+      console.log('📡 Database connected:', snap.val());
+      if (!snap.val()) {
+        alert('⚠️ Not connected to Firebase. Check console for errors.\n\nTIP: Check if database URL is correct in firebase-config.js');
+        return;
+      }
+      
+      // Proceed with sync
+      window.firebaseDB.ref('products').set(products)
+        .then(function() {
+          console.log('✅ Products synced successfully!');
+          alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
+          loadProducts();
+          loadDashboard();
+        })
+        .catch(function(err) {
+          console.error('❌ Sync error:', err);
+          alert('❌ Sync failed: ' + (err.message || err) + '\n\nCheck browser console (F12) for details.');
+        });
+    }).catch(function(err) {
+      console.error('❌ Connection test failed:', err);
+      alert('❌ Cannot connect to Firebase: ' + (err.message || err));
+    });
+  }
+    console.log('Syncing products to Firebase:', products.length, 'products');
     if (products.length === 0) {
       if (!confirm('No products found locally. Do you want to clear Firebase too?')) return;
     }
@@ -499,9 +533,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var orders = getOrders();
     if (!window.firebaseDB) {
       alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
-      window.open('https://console.firebase.google.com/project/girls-67c84/database');
+      window.open('https://console.firebase.google.com/project/girls-fit-e5735/database');
       return;
     }
+    console.log('Syncing orders to Firebase:', orders.length, 'orders');
     window.firebaseDB.ref('orders').set(orders)
       .then(function() {
         alert('✅ Orders synced to Firebase successfully!');
@@ -530,6 +565,26 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!checkAdminAccess(user)) return;
       updateProfileIcon(user);
       showAdminPage('dashboard');
+      
+      // Check Firebase DB status
+      setTimeout(function() {
+        if (window.firebaseDB) {
+          window.firebaseDB.ref('.info/connected').once('value').then(function(snap) {
+            var statusDiv = document.getElementById('firebaseStatus');
+            if (snap.val() === true) {
+              statusDiv.innerHTML = '✅ Firebase Connected';
+              statusDiv.style.background = '#c8e6c9';
+            } else {
+              statusDiv.innerHTML = '⚠️ Firebase DB Not Connected';
+              statusDiv.style.background = '#ffcdd2';
+            }
+          });
+        } else {
+          var statusDiv = document.getElementById('firebaseStatus');
+          statusDiv.innerHTML = '❌ Firebase DB Not Initialized';
+          statusDiv.style.background = '#ffcdd2';
+        }
+      }, 2000);
     } else {
       setTimeout(function() {
         if (!authHandled) {
