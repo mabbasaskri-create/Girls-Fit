@@ -97,6 +97,185 @@
   </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function updateNav(user) {
+    var navBar = document.getElementById('navBar');
+    if (user) {
+      var ordersLink = user.email === 'm.abbas.askri@gmail.com' ?
+        '<a href="admin.html">👩‍💼 Admin</a>' :
+        '<a href="orders.html">My Orders</a>';
+      navBar.innerHTML =
+        '<a href="index.html" class="active">Home</a>' +
+        '<a href="handbags.html">Handbags</a>' +
+        '<a href="pouches.html">Makeup Pouches</a>' +
+        '<a href="returns.html">Returns & Refunds</a>' +
+        ordersLink +
+        '<a href="cart.html">🛒 Cart</a>' +
+        '<a href="javascript:void(0)" onclick="logoutUser()" style="background:#ff5c8a;">Logout (' + user.email + ')</a>';
+    }
+  }
+
+  function updateProfileIcon(user) {
+    var icon = document.getElementById('profileIcon');
+    var dropdown = document.getElementById('dropdownMenu');
+    if (user) {
+      icon.innerText = '👤';
+      icon.title = user.email;
+      dropdown.innerHTML =
+        '<a href="' + (user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html') + '">' +
+          (user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders') +
+        '</a>' +
+        '<a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>';
+    } else {
+      icon.innerText = '👤';
+      icon.title = 'Sign In';
+      dropdown.innerHTML =
+        '<a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">' +
+          '<span class="google-icon" style="color:#4285f4;">G</span> Continue with Google' +
+        '</a>';
+    }
+  }
+
+  window.toggleDropdown = function() {
+    var dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+      var dropdowns = document.getElementsByClassName('dropdown-menu');
+      for (var i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].classList.remove('show');
+      }
+    }
+  }
+
+  window.signInWithGoogle = function() {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+      .then(function(result) {
+        var user = result.user;
+        window.currentFirebaseUser = user;
+        if (user.email === 'm.abbas.askri@gmail.com') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      })
+      .catch(function(error) {
+        console.error("Google sign-in error:", error);
+      });
+  };
+
+  window.logoutUser = function() {
+    firebase.auth().signOut().then(function() {
+      window.location.href = "login.html";
+    });
+  };
+
+  window.addToCart = function(name, price) {
+    var user = window.currentFirebaseUser;
+    if (!user) {
+      alert("Please login to add items to cart!");
+      window.location.href = "login.html";
+      return;
+    }
+    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.push({ name: name, price: price });
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert("💖 " + name + " added to cart!");
+  };
+
+  function loadFeaturedProducts() {
+    try {
+      var products = getProducts();
+      var featured = products.filter(function(p) { return p.featured; });
+      var container = document.getElementById('featuredProducts');
+      if (!container) return;
+      container.innerHTML = '';
+      if (featured.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;">No featured products yet.</p>';
+        return;
+      }
+      featured.forEach(function(p) {
+        var imgTag = p.image
+          ? '<div style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;margin-bottom:10px;background:#fff0f5;">' +
+              '<img src="' + p.image + '" alt="' + (p.name || '') + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';">' +
+            '</div>'
+          : '<div style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;background:#fff0f5;border-radius:10px;margin-bottom:10px;color:#ccc;">No Image</div>';
+        var safeName = (p.name || '').replace(/'/g, "\\'");
+        container.innerHTML +=
+          '<div class="product-card">' +
+            imgTag +
+            '<h3>' + (p.name || '') + '</h3>' +
+            '<p>₨' + (p.price || 0) + '</p>' +
+            '<button onclick="addToCart(\'' + safeName + '\', ' + (p.price || 0) + ')">Add to Cart</button>' +
+          '</div>';
+      });
+    } catch(err) {
+      console.error('loadFeaturedProducts error:', err);
+    }
+  }
+
+  // Fake reviews data
+  var fakeReviews = [
+    { name: "Ayesha M.", rating: 5, text: "Absolutely love my new handbag! The quality is amazing and it arrived so fast. 💖", product: "Pink Tote Bag" },
+    { name: "Sana K.", rating: 5, text: "The makeup pouch is so cute and spacious. Perfect for organizing my makeup!", product: "Floral Pouch" },
+    { name: "Fatima R.", rating: 4, text: "Great quality sling bag. Gets so many compliments! Would buy again.", product: "Mini Sling Bag" },
+    { name: "Mariam S.", rating: 5, text: "Customer service was excellent. They helped me pick the perfect handbag.", product: "Heart Handbag" },
+    { name: "Zainab A.", rating: 5, text: "The bow makeup kit pouch is adorable! My daughter loves it too.", product: "Bow Makeup Kit" },
+    { name: "Hira T.", rating: 4, text: "Love the design and quality. Will definitely order more from Girls Fit!", product: "Cute Backpack" }
+  ];
+
+  function loadReviews() {
+    var container = document.getElementById('reviewsGrid');
+    if (!container) return;
+    var html = '';
+    fakeReviews.forEach(function(r) {
+      var stars = '';
+      for (var i = 0; i < r.rating; i++) stars += '⭐';
+      html +=
+        '<div class="policy-box">' +
+          '<div style="color:#ff5c8a;font-size:1.2em;margin-bottom:8px;">' + stars + '</div>' +
+          '<p style="font-style:italic;margin-bottom:10px;">"' + r.text + '"</p>' +
+          '<p style="color:#ff5c8a;font-weight:bold;">— ' + r.name + '</p>' +
+          '<p style="color:#888;font-size:0.9em;">Purchased: ' + r.product + '</p>' +
+        '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  // Auth handling
+  var authHandled = false;
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (authHandled) return;
+    if (user) {
+      authHandled = true;
+      window.currentFirebaseUser = user;
+      updateProfileIcon(user);
+      updateNav(user);
+      loadFeaturedProducts();
+      loadReviews();
+    } else {
+      setTimeout(function() {
+        if (!authHandled) {
+          authHandled = true;
+          var persistedUser = firebase.auth().currentUser;
+          window.currentFirebaseUser = persistedUser;
+          if (persistedUser) {
+            updateProfileIcon(persistedUser);
+            updateNav(persistedUser);
+          }
+          loadFeaturedProducts();
+          loadReviews();
+        }
+      }, 1500);
+    }
+  });
+});
+</script>
+
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
 <!-- WhatsApp Floating Button -->
