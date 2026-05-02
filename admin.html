@@ -361,11 +361,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear from localStorage
     localStorage.setItem('products', JSON.stringify([]));
     
-    // Clear from Firebase
+    // Clear from Firebase Realtime Database
     if (window.firebaseDB) {
       window.firebaseDB.ref('products').remove()
         .then(function() {
-          alert('✅ All products cleared successfully!');
+          alert('✅ All products cleared from localStorage AND Firebase!');
           loadProducts();
           loadDashboard();
         })
