@@ -29,14 +29,71 @@
   </nav>
 </header>
 
-<section class="hero">
-  <h2>Welcome to Girls Fit!</h2>
-  <p>Your one-stop shop for trendy handbags & makeup pouches 💕</p>
+<!-- Banner Section -->
+<section class="banner" id="homeBanner" style="position:relative;text-align:center;padding:80px 20px;background:linear-gradient(135deg,#ff8ab3,#ffc1d6);color:white;overflow:hidden;">
+  <div id="bannerContent">
+    <h2 style="font-size:3em;margin-bottom:10px;">💖 Girls Fit 💖</h2>
+    <p style="font-size:1.3em;margin-bottom:20px;">Your one-stop shop for trendy handbags & makeup pouches</p>
+    <a href="handbags.html" style="background:white;color:#ff5c8a;padding:12px 30px;border-radius:25px;text-decoration:none;font-weight:bold;margin:5px;display:inline-block;">Shop Handbags</a>
+    <a href="pouches.html" style="background:white;color:#ff5c8a;padding:12px 30px;border-radius:25px;text-decoration:none;font-weight:bold;margin:5px;display:inline-block;">Shop Pouches</a>
+  </div>
 </section>
 
+<!-- Collections Section -->
+<section class="collections" style="padding:40px 20px;max-width:1100px;margin:auto;">
+  <h2 style="text-align:center;color:#ff5c8a;margin-bottom:30px;font-size:2em;">👜 Our Collections</h2>
+  <div class="product-grid">
+    <div class="product-card" onclick="location.href='handbags.html'" style="cursor:pointer;">
+      <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400" alt="Handbags" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;">
+      <h3>👜 Handbags</h3>
+      <p>Stylish handbags for every occasion</p>
+    </div>
+    <div class="product-card" onclick="location.href='pouches.html'" style="cursor:pointer;">
+      <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400" alt="Makeup Pouches" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;">
+      <h3>💄 Makeup Pouches</h3>
+      <p>Cute pouches to organize your beauty essentials</p>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products -->
 <section class="products">
   <h2>✨ Featured Products ✨</h2>
   <div class="product-grid" id="featuredProducts">
+  </div>
+</section>
+
+<!-- Fake Reviews Section -->
+<section class="reviews" style="padding:40px 20px;max-width:1100px;margin:auto;background:#fff0f5;">
+  <h2 style="text-align:center;color:#ff5c8a;margin-bottom:30px;font-size:2em;">⭐ Customer Reviews</h2>
+  <div class="product-grid" id="reviewsGrid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">
+  </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="why-us" style="padding:40px 20px;max-width:1100px;margin:auto;">
+  <h2 style="text-align:center;color:#ff5c8a;margin-bottom:30px;font-size:2em;">💖 Why Choose Us</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+    <div class="policy-box" style="text-align:center;">
+      <div style="font-size:3em;">🚚</div>
+      <h3 style="color:#ff5c8a;">Fast Delivery</h3>
+      <p>Quick and reliable shipping to your doorstep</p>
+    </div>
+    <div class="policy-box" style="text-align:center;">
+      <div style="font-size:3em;">💎</div>
+      <h3 style="color:#ff5c8a;">Premium Quality</h3>
+      <p>Handcrafted with love and attention to detail</p>
+    </div>
+    <div class="policy-box" style="text-align:center;">
+      <div style="font-size:3em;">💰</div>
+      <h3 style="color:#ff5c8a;">Cash on Delivery</h3>
+      <p>Pay only when you receive your order</p>
+    </div>
+    <div class="policy-box" style="text-align:center;">
+      <div style="font-size:3em;">🔄</div>
+      <h3 style="color:#ff5c8a;">Easy Returns</h3>
+      <p>14-day hassle-free return policy</p>
+    </div>
   </div>
 </section>
 
@@ -152,6 +209,45 @@
     });
   }
 
+  // Fake reviews data
+  const fakeReviews = [
+    { name: "Ayesha M.", rating: 5, text: "Absolutely love my new handbag! The quality is amazing and it arrived so fast. 💖", product: "Pink Tote Bag" },
+    { name: "Sana K.", rating: 5, text: "The makeup pouch is so cute and spacious. Perfect for organizing my makeup!", product: "Floral Pouch" },
+    { name: "Fatima R.", rating: 4, text: "Great quality sling bag. Gets so many compliments! Would buy again.", product: "Mini Sling Bag" },
+    { name: "Mariam S.", rating: 5, text: "Customer service was excellent. They helped me pick the perfect handbag.", product: "Heart Handbag" },
+    { name: "Zainab A.", rating: 5, text: "The bow makeup kit pouch is adorable! My daughter loves it too.", product: "Bow Makeup Kit" },
+    { name: "Hira T.", rating: 4, text: "Love the design and quality. Will definitely order more from Girls Fit!", product: "Cute Backpack" }
+  ];
+
+  function loadReviews() {
+    const container = document.getElementById('reviewsGrid');
+    if (!container) return;
+    container.innerHTML = '';
+    fakeReviews.forEach(r => {
+      const stars = '⭐'.repeat(r.rating);
+      container.innerHTML += `
+        <div class="policy-box">
+          <div style="color:#ff5c8a;font-size:1.2em;margin-bottom:8px;">${stars}</div>
+          <p style="font-style:italic;margin-bottom:10px;">"${r.text}"</p>
+          <p style="color:#ff5c8a;font-weight:bold;">— ${r.name}</p>
+          <p style="color:#888;font-size:0.9em;">Purchased: ${r.product}</p>
+        </div>`;
+    });
+  }
+
+  // Load banner from storage
+  function loadBanner() {
+    const banner = JSON.parse(localStorage.getItem('siteBanner')) || null;
+    const bannerSection = document.getElementById('homeBanner');
+    const bannerContent = document.getElementById('bannerContent');
+    if (banner && bannerSection && bannerContent) {
+      bannerSection.style.background = `linear-gradient(rgba(255,138,179,0.7), rgba(255,193,214,0.7)), url('${banner.imageUrl}') center/cover no-repeat`;
+      bannerSection.style.color = 'white';
+      if (banner.title) bannerContent.querySelector('h2').innerText = banner.title;
+      if (banner.subtitle) bannerContent.querySelector('p').innerText = banner.subtitle;
+    }
+  }
+
   window.addToCart = function(name, price) {
     const user = window.currentFirebaseUser;
     if (!user) {
@@ -175,6 +271,8 @@
       updateProfileIcon(user);
       updateNav(user);
       loadFeaturedProducts();
+      loadReviews();
+      loadBanner();
     } else {
       // Give Firebase time to restore auth from persistence before treating as logged out
       setTimeout(() => {
@@ -187,6 +285,8 @@
             updateNav(persistedUser);
             loadFeaturedProducts();
           }
+          loadReviews();
+          loadBanner();
         }
       }, 1500);
     }

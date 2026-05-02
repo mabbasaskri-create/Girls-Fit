@@ -24,6 +24,7 @@
     <a href="javascript:void(0)" onclick="showAdminPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
     <a href="javascript:void(0)" onclick="showAdminPage('products')" id="nav-products">All Products</a>
     <a href="javascript:void(0)" onclick="showAdminPage('orders')" id="nav-orders">All Orders</a>
+    <a href="javascript:void(0)" onclick="showAdminPage('banners')" id="nav-banners">Banners</a>
     <a href="index.html">View Site</a>
     <a href="javascript:void(0)" onclick="firebaseLogout()" style="background:#ff5c8a;">Logout</a>
   </nav>
@@ -106,6 +107,27 @@
   </table>
 </div>
 
+<!-- Banner Management -->
+<div id="admin-banners" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
+  <h2>🖼️ Banner Management</h2>
+  <div class="policy-box">
+    <h3>Current Home Page Banner</h3>
+    <div id="currentBannerPreview" style="margin:15px 0;text-align:center;">
+      <p style="color:#888;">No banner set yet.</p>
+    </div>
+    <p><b>Upload New Banner Image</b></p>
+    <input type="file" id="bannerImage" accept="image/*" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <p><b>Banner Title (optional)</b></p>
+    <input type="text" id="bannerTitle" placeholder="Girls Fit" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <p><b>Banner Subtitle (optional)</b></p>
+    <input type="text" id="bannerSubtitle" placeholder="Your one-stop shop" style="width:100%;padding:10px;margin:8px 0;border:2px solid #ffc1d6;border-radius:10px;">
+    <div style="margin-top:15px;">
+      <button onclick="saveBanner()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">Save Banner</button>
+      <button onclick="removeBanner()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">Remove Banner</button>
+    </div>
+  </div>
+</div>
+
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
 <script>
@@ -144,6 +166,72 @@
     if (page === 'dashboard') loadDashboard();
     if (page === 'products') loadProducts();
     if (page === 'orders') loadOrders();
+    if (page === 'banners') loadBannerPreview();
+  }
+
+  // Banner Management
+  function loadBannerPreview() {
+    const banner = JSON.parse(localStorage.getItem('siteBanner')) || null;
+    const preview = document.getElementById('currentBannerPreview');
+    if (banner && preview) {
+      preview.innerHTML = `
+        <div style="position:relative;display:inline-block;max-width:100%;">
+          <img src="${banner.imageUrl}" style="max-width:100%;max-height:300px;border-radius:10px;object-fit:cover;">
+          <div style="margin-top:10px;">
+            <p><b>Title:</b> ${banner.title || 'None'}</p>
+            <p><b>Subtitle:</b> ${banner.subtitle || 'None'}</p>
+          </div>
+        </div>`;
+    } else if (preview) {
+      preview.innerHTML = '<p style="color:#888;">No banner set yet.</p>';
+    }
+  }
+
+  async function saveBanner() {
+    try {
+      const imageFile = document.getElementById('bannerImage').files[0];
+      const title = document.getElementById('bannerTitle').value.trim();
+      const subtitle = document.getElementById('bannerSubtitle').value.trim();
+
+      let imageUrl = '';
+      if (imageFile) {
+        try {
+          const storageRef = firebase.storage().ref('banners/' + Date.now() + '_' + imageFile.name);
+          await storageRef.put(imageFile);
+          imageUrl = await storageRef.getDownloadURL();
+        } catch (err) {
+          console.error("Banner upload failed:", err);
+          alert("Image upload failed: " + (err.message || err) + "\nBanner will be saved without image.");
+        }
+      }
+
+      const existingBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
+      const bannerData = {
+        imageUrl: imageUrl || existingBanner.imageUrl || '',
+        title: title || existingBanner.title || '',
+        subtitle: subtitle || existingBanner.subtitle || '',
+        updatedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem('siteBanner', JSON.stringify(bannerData));
+      alert("✅ Banner saved successfully!");
+      loadBannerPreview();
+
+      // Clear inputs
+      document.getElementById('bannerImage').value = '';
+      document.getElementById('bannerTitle').value = '';
+      document.getElementById('bannerSubtitle').value = '';
+    } catch (err) {
+      console.error("Save banner error:", err);
+      alert("Error saving banner: " + (err.message || err));
+    }
+  }
+
+  function removeBanner() {
+    if (!confirm("Are you sure you want to remove the banner?")) return;
+    localStorage.removeItem('siteBanner');
+    alert("✅ Banner removed successfully!");
+    loadBannerPreview();
   }
 
   // Dashboard
@@ -209,53 +297,69 @@
   }
 
   async function saveProduct() {
-    const editId = document.getElementById('editId').value;
-    const name = document.getElementById('prodName').value;
-    const price = parseInt(document.getElementById('prodPrice').value);
-    const category = document.getElementById('prodCategory').value;
-    const featured = document.getElementById('prodFeatured').value === 'true';
-    const imageFile = document.getElementById('prodImage').files[0];
+    try {
+      const editId = document.getElementById('editId').value;
+      const name = document.getElementById('prodName').value.trim();
+      const price = parseInt(document.getElementById('prodPrice').value);
+      const category = document.getElementById('prodCategory').value;
+      const featured = document.getElementById('prodFeatured').value === 'true';
+      const imageFile = document.getElementById('prodImage').files[0];
 
-    if (!name || !price) {
-      alert("Please fill all fields");
-      return;
+      if (!name || !price || price <= 0) {
+        alert("Please fill all fields with valid values");
+        return;
+      }
+
+      let imageUrl = '';
+      if (imageFile) {
+        try {
+          const storageRef = firebase.storage().ref('products/' + Date.now() + '_' + imageFile.name);
+          await storageRef.put(imageFile);
+          imageUrl = await storageRef.getDownloadURL();
+        } catch (err) {
+          console.error("Image upload failed:", err);
+          alert("Image upload failed: " + (err.message || err) + "\nProduct will be saved without image.");
+        }
+      }
+
+      let products = getProducts();
+      if (!Array.isArray(products)) products = [];
+
+      if (editId) {
+        const index = products.findIndex(p => String(p.id) === String(editId));
+        if (index === -1) {
+          alert("Product not found!");
+          return;
+        }
+        const existingImage = products[index].image || '';
+        products[index] = {
+          id: Number(editId),
+          name,
+          price,
+          category,
+          featured,
+          image: imageUrl || existingImage
+        };
+      } else {
+        const newId = products.length > 0 ? Math.max(...products.map(p => Number(p.id) || 0)) + 1 : 1;
+        products.push({
+          id: newId,
+          name,
+          price,
+          category,
+          featured,
+          image: imageUrl
+        });
+      }
+
+      saveProducts(products);
+      alert("✅ Product saved successfully!");
+      cancelProduct();
+      loadProducts();
+    } catch (err) {
+      console.error("Save product error:", err);
+      alert("Error saving product: " + (err.message || err));
     }
-
-    let imageUrl = '';
-    if (imageFile) {
-      const storageRef = firebase.storage().ref('products/' + Date.now() + '_' + imageFile.name);
-      await storageRef.put(imageFile);
-      imageUrl = await storageRef.getDownloadURL();
-    }
-
-    let products = getProducts();
-
-    if (editId) {
-      const index = products.findIndex(p => p.id == editId);
-      const existingImage = products[index].image || '';
-      products[index] = {
-        id: parseInt(editId),
-        name,
-        price,
-        category,
-        featured,
-        image: imageUrl || existingImage
-      };
-    } else {
-      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({
-        id: newId,
-        name,
-        price,
-        category,
-        featured,
-        image: imageUrl
-      });
-    }
-
-    saveProducts(products);
-    cancelProduct();
-    loadProducts();
   }
 
   function cancelProduct() {
