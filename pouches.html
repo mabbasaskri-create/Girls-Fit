@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>💄 Makeup Pouches - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -33,8 +36,20 @@
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
-<script type="module">
-  import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwdHkfb9DBVV5oLYw1WaEPfVN1_MYm30Y",
+    authDomain: "girls-67c84.firebaseapp.com",
+    projectId: "girls-67c84",
+    storageBucket: "girls-67c84.appspot.com",
+    messagingSenderId: "87884221171",
+    appId: "1:87884221171:web:12f70ce888930fe1ab4586",
+    measurementId: "G-SRPHVVDZWK"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
 
   // Update nav based on auth state
   function updateNav(user) {
@@ -55,8 +70,62 @@
     }
   }
 
+  function updateProfileIcon(user) {
+    const icon = document.getElementById('profileIcon');
+    const dropdown = document.getElementById('dropdownMenu');
+    if (user) {
+      icon.innerText = '👤';
+      icon.title = user.email;
+      dropdown.innerHTML = `
+        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
+          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
+        </a>
+        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
+      `;
+    } else {
+      icon.innerText = '👤';
+      icon.title = 'Sign In';
+      dropdown.innerHTML = `
+        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
+          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
+        </a>
+      `;
+    }
+  }
+
+  window.toggleDropdown = function() {
+    const dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+      const dropdowns = document.getElementsByClassName('dropdown-menu');
+      for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].classList.remove('show');
+      }
+    }
+  }
+
+  window.signInWithGoogle = function() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        window.currentFirebaseUser = user;
+        if (user.email === 'm.abbas.askri@gmail.com') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'pouches.html';
+        }
+      })
+      .catch((error) => {
+        console.error("Google sign-in error:", error);
+      });
+  };
+
   window.logoutUser = function() {
-    signOut(auth).then(() => {
+    firebase.auth().signOut().then(() => {
       window.location.href = "login.html";
     });
   };
@@ -89,56 +158,29 @@
     alert("💖 " + name + " added to cart!");
   };
 
-  function updateProfileIcon(user) {
-    const icon = document.getElementById('profileIcon');
-    const dropdown = document.getElementById('dropdownMenu');
+  // Auth handling that waits for persistence to restore before acting on null
+  let authHandled = false;
+  firebase.auth().onAuthStateChanged((user) => {
+    if (authHandled) return;
     if (user) {
-      icon.innerText = '👤';
-      icon.title = user.email;
-      dropdown.innerHTML = `
-        <a href="${user.email === 'm.abbas.askri@gmail.com' ? 'admin.html' : 'orders.html'}">
-          ${user.email === 'm.abbas.askri@gmail.com' ? '👩‍💼 Admin Panel' : '📦 My Orders'}
-        </a>
-        <a href="javascript:void(0)" onclick="logoutUser()">🚪 Logout</a>
-      `;
-    } else {
-      icon.innerText = '👤';
-      icon.title = 'Sign In';
-      dropdown.innerHTML = `
-        <a href="javascript:void(0)" onclick="signInWithGoogle()" class="google-btn">
-          <span class="google-icon" style="color:#4285f4;">G</span> Continue with Google
-        </a>
-      `;
-    }
-  }
-
-  window.toggleDropdown = function() {
-    const dropdown = document.getElementById('dropdownMenu');
-    dropdown.classList.toggle('show');
-  }
-
-  // Close dropdown when clicking outside
-  window.onclick = function(event) {
-    if (!event.target.matches('.profile-icon')) {
-      const dropdowns = document.getElementsByClassName('dropdown-menu');
-      for (let i = 0; i < dropdowns.length; i++) {
-        dropdowns[i].classList.remove('show');
-      }
-    }
-  }
-
-  window.signInWithGoogle = function() {
-    window.location.href = 'login.html';
-  };
-
-  onAuthStateChanged(auth, (user) => {
-    window.currentFirebaseUser = user;
-    updateProfileIcon(user);
-    if (user) {
+      authHandled = true;
+      window.currentFirebaseUser = user;
+      updateProfileIcon(user);
       updateNav(user);
       loadPouches();
     } else {
-      window.location.href = "login.html";
+      setTimeout(() => {
+        if (!authHandled) {
+          authHandled = true;
+          const persistedUser = firebase.auth().currentUser;
+          window.currentFirebaseUser = persistedUser;
+          updateProfileIcon(persistedUser);
+          if (persistedUser) {
+            updateNav(persistedUser);
+          }
+          loadPouches();
+        }
+      }, 1500);
     }
   });
 </script>

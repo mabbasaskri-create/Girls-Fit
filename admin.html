@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <title>👩‍💼 Admin Panel - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
 </head>
 <body>
 
@@ -103,15 +108,31 @@
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
-<script type="module">
-  import { auth, storage, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL } from './firebase-config.js';
-
-  // Check admin access
-  onAuthStateChanged(auth, (user) => {
+<script>
+  // Wait for Firebase auth to be ready, handling initial null from persistence restore
+  let authHandled = false;
+  function handleAuth(user) {
+    if (authHandled) return;
+    authHandled = true;
     if (!user || user.email !== 'm.abbas.askri@gmail.com') {
       window.location.href = "login.html";
+      return;
     }
     window.currentFirebaseUser = user;
+    updateProfileIcon(user);
+  }
+
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      handleAuth(user);
+    } else {
+      // Wait a bit for auth to restore from persistence before redirecting
+      setTimeout(() => {
+        if (!authHandled) {
+          handleAuth(firebase.auth().currentUser);
+        }
+      }, 1500);
+    }
   });
 
   function showAdminPage(page) {
@@ -202,9 +223,9 @@
 
     let imageUrl = '';
     if (imageFile) {
-      const storageRef = ref(storage, 'products/' + Date.now() + '_' + imageFile.name);
-      await uploadBytes(storageRef, imageFile);
-      imageUrl = await getDownloadURL(storageRef);
+      const storageRef = firebase.storage().ref('products/' + Date.now() + '_' + imageFile.name);
+      await storageRef.put(imageFile);
+      imageUrl = await storageRef.getDownloadURL();
     }
 
     let products = getProducts();
@@ -301,7 +322,7 @@
   }
 
   window.firebaseLogout = function() {
-    signOut(auth).then(() => {
+    firebase.auth().signOut().then(() => {
       window.location.href = "login.html";
     });
   }
@@ -332,7 +353,6 @@
     dropdown.classList.toggle('show');
   }
 
-  // Close dropdown when clicking outside
   window.onclick = function(event) {
     if (!event.target.matches('.profile-icon')) {
       const dropdowns = document.getElementsByClassName('dropdown-menu');
@@ -346,20 +366,8 @@
     window.location.href = 'login.html';
   };
 
-  // Make functions available globally
-  window.showAdminPage = showAdminPage;
-  window.loadDashboard = loadDashboard;
-  window.loadProducts = loadProducts;
-  window.loadOrders = loadOrders;
-  window.showAddProduct = showAddProduct;
-  window.editProduct = editProduct;
-  window.saveProduct = saveProduct;
-  window.cancelProduct = cancelProduct;
-  window.deleteProduct = deleteProduct;
-  window.updateOrderStatus = updateOrderStatus;
-
   // Load dashboard by default
-  loadDashboard();
+  showAdminPage('dashboard');
 </script>
 
 </body>

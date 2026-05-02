@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>📋 Returns & Refunds - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -63,8 +66,20 @@
 
 <footer><p>© 2025 Girls Fit 💖 All rights reserved</p></footer>
 
-<script type="module">
-  import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwdHkfb9DBVV5oLYw1WaEPfVN1_MYm30Y",
+    authDomain: "girls-67c84.firebaseapp.com",
+    projectId: "girls-67c84",
+    storageBucket: "girls-67c84.appspot.com",
+    messagingSenderId: "87884221171",
+    appId: "1:87884221171:web:12f70ce888930fe1ab4586",
+    measurementId: "G-SRPHVVDZWK"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
 
   function updateNav(user) {
     const navBar = document.getElementById('navBar');
@@ -83,12 +98,6 @@
       `;
     }
   }
-
-  window.logoutUser = function() {
-    signOut(auth).then(() => {
-      window.location.href = "login.html";
-    });
-  };
 
   function updateProfileIcon(user) {
     const icon = document.getElementById('profileIcon');
@@ -118,7 +127,6 @@
     dropdown.classList.toggle('show');
   }
 
-  // Close dropdown when clicking outside
   window.onclick = function(event) {
     if (!event.target.matches('.profile-icon')) {
       const dropdowns = document.getElementsByClassName('dropdown-menu');
@@ -129,16 +137,49 @@
   }
 
   window.signInWithGoogle = function() {
-    window.location.href = 'login.html';
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        window.currentFirebaseUser = user;
+        if (user.email === 'm.abbas.askri@gmail.com') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'returns.html';
+        }
+      })
+      .catch((error) => {
+        console.error("Google sign-in error:", error);
+      });
   };
 
-  onAuthStateChanged(auth, (user) => {
-    window.currentFirebaseUser = user;
-    updateProfileIcon(user);
+  window.logoutUser = function() {
+    firebase.auth().signOut().then(() => {
+      window.location.href = "login.html";
+    });
+  };
+
+  // Auth handling that waits for persistence to restore before acting on null
+  let authHandled = false;
+  firebase.auth().onAuthStateChanged((user) => {
+    if (authHandled) return;
     if (user) {
+      authHandled = true;
+      window.currentFirebaseUser = user;
+      updateProfileIcon(user);
       updateNav(user);
     } else {
-      window.location.href = "login.html";
+      setTimeout(() => {
+        if (!authHandled) {
+          authHandled = true;
+          const persistedUser = firebase.auth().currentUser;
+          window.currentFirebaseUser = persistedUser;
+          updateProfileIcon(persistedUser);
+          if (persistedUser) {
+            updateNav(persistedUser);
+          }
+        }
+      }, 1500);
     }
   });
 </script>

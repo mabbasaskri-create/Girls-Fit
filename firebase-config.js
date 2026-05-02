@@ -1,19 +1,15 @@
-// Firebase Configuration - REPLACE with your actual config from Firebase Console
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
+// Firebase config - Compat SDK (works with all pages)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDwdHkfb9DBVV5oLYw1WaEPfVN1_MYm30Y",
+  authDomain: "girls-67c84.firebaseapp.com",
+  projectId: "girls-67c84",
+  storageBucket: "girls-67c84.firebasestorage.app",
+  messagingSenderId: "87884221171",
+  appId: "1:87884221171:web:12f70ce888930fe1ab4586",
+  measurementId: "G-SRPHVVDZWK"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
-
-export { signInWithEmailAndPassword, signOut, onAuthStateChanged, ref, uploadBytes, getDownloadURL };
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+window.firebaseAuth = firebase.auth();
+window.firebaseStorage = firebase.storage();

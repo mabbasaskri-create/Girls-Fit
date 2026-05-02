@@ -165,12 +165,30 @@
     alert("💖 " + name + " added to cart!");
   };
 
+  // Auth handling that waits for persistence to restore before acting on null
+  let authHandled = false;
   firebase.auth().onAuthStateChanged((user) => {
-    window.currentFirebaseUser = user;
-    updateProfileIcon(user);
+    if (authHandled) return;
     if (user) {
+      authHandled = true;
+      window.currentFirebaseUser = user;
+      updateProfileIcon(user);
       updateNav(user);
       loadFeaturedProducts();
+    } else {
+      // Give Firebase time to restore auth from persistence before treating as logged out
+      setTimeout(() => {
+        if (!authHandled) {
+          authHandled = true;
+          const persistedUser = firebase.auth().currentUser;
+          window.currentFirebaseUser = persistedUser;
+          updateProfileIcon(persistedUser);
+          if (persistedUser) {
+            updateNav(persistedUser);
+            loadFeaturedProducts();
+          }
+        }
+      }, 1500);
     }
   });
 </script>

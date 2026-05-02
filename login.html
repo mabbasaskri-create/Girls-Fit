@@ -136,9 +136,12 @@
       });
   });
 
-  // Redirect if already logged in
+  // Auth handling that waits for persistence to restore before acting on null
+  let authHandled = false;
   auth.onAuthStateChanged((user) => {
+    if (authHandled) return;
     if (user) {
+      authHandled = true;
       window.currentFirebaseUser = user;
       console.log("User already logged in:", user.email);
       if (user.email === 'm.abbas.askri@gmail.com') {
@@ -146,6 +149,22 @@
       } else {
         window.location.href = "index.html";
       }
+    } else {
+      setTimeout(() => {
+        if (!authHandled) {
+          authHandled = true;
+          const persistedUser = auth.currentUser;
+          if (persistedUser) {
+            window.currentFirebaseUser = persistedUser;
+            console.log("User already logged in:", persistedUser.email);
+            if (persistedUser.email === 'm.abbas.askri@gmail.com') {
+              window.location.href = "admin.html";
+            } else {
+              window.location.href = "index.html";
+            }
+          }
+        }
+      }, 1500);
     }
   });
 </script>
