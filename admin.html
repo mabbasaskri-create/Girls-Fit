@@ -303,32 +303,14 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
 
-        // Save to localStorage
+        // Save to localStorage ONLY (no auto-sync)
         localStorage.setItem('products', JSON.stringify(products));
 
-        // Save to Firebase Realtime Database
-        if (window.firebaseDB) {
-          window.firebaseDB.ref('products').set(products)
-            .then(function() {
-              console.log('✅ Products synced to Firebase:', products.length, 'products');
-              alert('✅ Product saved & synced to all devices!');
-              cancelProduct();
-              loadProducts();
-              loadDashboard();
-            })
-            .catch(function(err) {
-              console.error('Firebase sync error:', err);
-              alert('Product saved locally, but Firebase sync failed: ' + (err.message || err));
-              cancelProduct();
-              loadProducts();
-              loadDashboard();
-            });
-        } else {
-          alert('✅ Product saved locally! (Firebase not connected)');
-          cancelProduct();
-          loadProducts();
-          loadDashboard();
-        }
+        // Ask user to sync
+        alert('✅ Product saved locally!\n\nClick "🔄 Sync to Firebase" button to share with all devices.');
+        cancelProduct();
+        loadProducts();
+        loadDashboard();
       };
 
       // Process images
