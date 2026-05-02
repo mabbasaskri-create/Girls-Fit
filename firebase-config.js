@@ -6,7 +6,8 @@ const firebaseConfig = {
   storageBucket: "girls-67c84.firebasestorage.app",
   messagingSenderId: "87884221171",
   appId: "1:87884221171:web:12f70ce888930fe1ab4586",
-  measurementId: "G-SRPHVVDZWK"
+  measurementId: "G-SRPHVVDZWK",
+  databaseURL: "https://girls-67c84-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
@@ -16,4 +17,10 @@ window.firebaseAuth = firebase.auth();
 // Use the correct bucket explicitly
 window.firebaseStorage = firebase.storage();
 // Initialize Realtime Database
-window.firebaseDB = firebase.database();
+try {
+  window.firebaseDB = firebase.database();
+  console.log('✅ Firebase Realtime Database initialized');
+} catch (err) {
+  console.error('❌ Firebase Realtime Database init error:', err);
+  console.log('📋 To fix: Go to Firebase Console → Realtime Database → Create Database');
+}

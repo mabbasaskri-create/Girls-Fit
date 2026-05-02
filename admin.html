@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>👩‍💼 Admin Panel - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -30,7 +33,7 @@
 <!-- Dashboard -->
 <div id="admin-dashboard" class="admin-page" style="padding:40px 20px;max-width:1100px;margin:auto;">
   <h2>📊 Dashboard</h2>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:30px 0;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;margin:30px 0;">
     <div class="policy-box" style="text-align:center;">
       <h3 style="color:#ff5c8a;">Total Products</h3>
       <p style="font-size:2.5em;font-weight:bold;color:#ff8ab3;" id="dashTotalProducts">0</p>
@@ -55,6 +58,7 @@
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
     <h2>📦 All Products</h2>
     <div>
+      <button onclick="clearAllProducts()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🗑️ Clear All</button>
       <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 Sync to Firebase</button>
       <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
     </div>
@@ -98,15 +102,11 @@
   </table>
 </div>
 
-  // Orders Management -->
+<!-- Orders Management -->
 <div id="admin-orders" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
-    <h2>📦 All Products</h2>
-    <div>
-      <button onclick="clearAllProducts()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🗑️ Clear All Products</button>
-      <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 Sync to Firebase</button>
-      <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
-    </div>
+    <h2>📦 All Orders</h2>
+    <button onclick="syncOrdersToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">🔄 Sync to Firebase</button>
   </div>
   <table>
     <thead>
@@ -193,9 +193,9 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     products.forEach(function(p) {
-      var imgTag = p.image
-        ? '<img src="' + p.image + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null;this.style.display=\'none\';">'
-        : 'No image';
+      var imgTag = p.images && p.images[0]
+        ? '<img src="' + p.images[0] + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null;this.style.display=\'none\';">'
+        : (p.image ? '<img src="' + p.image + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null;this.style.display=\'none\';">' : 'No image');
       var desc = (p.description || 'No description').substring(0, 50) + ((p.description || '').length > 50 ? '...' : '');
       tbody.innerHTML +=
         '<tr>' +
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '<td>' + (p.category === 'handbag' ? '👜 Handbag' : '💄 Pouch') + '</td>' +
           '<td>' + (p.featured ? '✅' : '❌') + '</td>' +
           '<td>' +
-            '<button onclick="editProduct(' + p.id + ')" style="background:#2196f3;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
+            '<button onclick="editProduct(' + p.id + ')" style="background:#2196F3;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;margin-right:5px;">Edit</button>' +
             '<button onclick="deleteProduct(' + p.id + ')" style="background:#f44336;color:white;border:none;padding:6px 12px;border-radius:15px;cursor:pointer;">Delete</button>' +
           '</td>' +
         '</tr>';
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
           var index = products.findIndex(function(p) { return String(p.id) === String(editId); });
           if (index === -1) { alert('Product not found!'); return; }
           var existingImages = products[index].images || (products[index].image ? [products[index].image] : []);
-          var updatedProduct = {
+          products[index] = {
             id: Number(editId),
             name: name,
             price: price,
@@ -289,10 +289,9 @@ document.addEventListener('DOMContentLoaded', function() {
             images: images.length > 0 ? images : existingImages,
             image: images.length > 0 ? images[0] : (existingImages[0] || '')
           };
-          products[index] = updatedProduct;
         } else {
           var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return Number(p.id) || 0; })) + 1 : 1;
-          var newProduct = {
+          products.push({
             id: newId,
             name: name,
             price: price,
@@ -301,13 +300,12 @@ document.addEventListener('DOMContentLoaded', function() {
             featured: featured,
             images: images,
             image: images.length > 0 ? images[0] : ''
-          };
-          products.push(newProduct);
+          });
         }
 
         // Save to localStorage
         localStorage.setItem('products', JSON.stringify(products));
-        
+
         // Save to Firebase Realtime Database
         if (window.firebaseDB) {
           window.firebaseDB.ref('products').set(products)
@@ -373,8 +371,25 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!confirm('Are you sure you want to delete this product?')) return;
     var products = getProducts();
     products = products.filter(function(p) { return p.id !== id; });
-    saveProducts(products);
-    loadProducts();
+    localStorage.setItem('products', JSON.stringify(products));
+
+    // Sync to Firebase
+    if (window.firebaseDB) {
+      window.firebaseDB.ref('products').set(products)
+        .then(function() {
+          alert('✅ Product deleted & synced!');
+          loadProducts();
+          loadDashboard();
+        })
+        .catch(function(err) {
+          console.error('Firebase sync error:', err);
+          loadProducts();
+          loadDashboard();
+        });
+    } else {
+      loadProducts();
+      loadDashboard();
+    }
   }
 
   // Clear all products
@@ -400,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
           loadDashboard();
         });
     } else {
-      alert('✅ All products cleared from localStorage!');
+      alert('✅ All products cleared from localStorage! (Firebase not connected)');
       loadProducts();
       loadDashboard();
     }
@@ -410,7 +425,8 @@ document.addEventListener('DOMContentLoaded', function() {
   window.syncProductsToFirebase = function() {
     var products = getProducts();
     if (!window.firebaseDB) {
-      alert('Firebase not initialized! Please refresh the page.');
+      alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
+      window.open('https://console.firebase.google.com/project/girls-67c84/database');
       return;
     }
     if (products.length === 0) {
@@ -425,29 +441,11 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .catch(function(err) {
         console.error('Sync error:', err);
-        alert('Sync failed: ' + (err.message || err));
+        alert('❌ Sync failed: ' + (err.message || err) + '\n\nMake sure Realtime Database is created in Firebase Console.');
       });
   }
 
-  // Sync orders to Firebase manually
-  window.syncOrdersToFirebase = function() {
-    var orders = getOrders();
-    if (!window.firebaseDB) {
-      alert('Firebase not initialized! Please refresh the page.');
-      return;
-    }
-    window.firebaseDB.ref('orders').set(orders)
-      .then(function() {
-        alert('✅ Orders synced to Firebase successfully!');
-        console.log('Orders synced:', orders.length);
-      })
-      .catch(function(err) {
-        console.error('Sync error:', err);
-        alert('Sync failed: ' + (err.message || err));
-      });
-  }
-
-  // Orders display functions...
+  // Orders
   function loadOrders() {
     var orders = getOrders();
     var tbody = document.getElementById('ordersTableBody');
@@ -496,9 +494,42 @@ document.addEventListener('DOMContentLoaded', function() {
     var index = orders.findIndex(function(o) { return o.id == orderId; });
     if (index !== -1) {
       orders[index].status = newStatus;
-      saveOrders(orders);
-      loadOrders();
+      localStorage.setItem('orders', JSON.stringify(orders));
+
+      // Sync to Firebase
+      if (window.firebaseDB) {
+        window.firebaseDB.ref('orders').set(orders)
+          .then(function() {
+            loadOrders();
+          })
+          .catch(function(err) {
+            console.error('Firebase sync error:', err);
+            loadOrders();
+          });
+      } else {
+        loadOrders();
+      }
     }
+  }
+
+  // Sync orders to Firebase manually
+  window.syncOrdersToFirebase = function() {
+    var orders = getOrders();
+    if (!window.firebaseDB) {
+      alert('❌ Firebase Realtime Database NOT CONNECTED!\n\nPlease follow these steps:\n1. Go to Firebase Console\n2. Click "Realtime Database"\n3. Click "Create Database"\n4. Choose "Start in test mode"\n5. Click "Enable"');
+      window.open('https://console.firebase.google.com/project/girls-67c84/database');
+      return;
+    }
+    window.firebaseDB.ref('orders').set(orders)
+      .then(function() {
+        alert('✅ Orders synced to Firebase successfully!');
+        console.log('Orders synced:', orders.length);
+        loadOrders();
+      })
+      .catch(function(err) {
+        console.error('Sync error:', err);
+        alert('❌ Sync failed: ' + (err.message || err) + '\n\nMake sure Realtime Database is created in Firebase Console.');
+      });
   }
 
   window.firebaseLogout = function() {
