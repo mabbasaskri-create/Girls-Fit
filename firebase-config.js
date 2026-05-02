@@ -11,5 +11,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+const app = firebase.app();
 window.firebaseAuth = firebase.auth();
+// Use the correct bucket explicitly
 window.firebaseStorage = firebase.storage();

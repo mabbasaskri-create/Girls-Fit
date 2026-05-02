@@ -193,21 +193,24 @@
       const title = document.getElementById('bannerTitle').value.trim();
       const subtitle = document.getElementById('bannerSubtitle').value.trim();
 
-      let imageUrl = '';
+      let imageData = '';
       if (imageFile) {
         try {
-          const storageRef = firebase.storage().ref('banners/' + Date.now() + '_' + imageFile.name);
-          await storageRef.put(imageFile);
-          imageUrl = await storageRef.getDownloadURL();
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(imageFile);
+          });
         } catch (err) {
-          console.error("Banner upload failed:", err);
-          alert("Image upload failed: " + (err.message || err) + "\nBanner will be saved without image.");
+          console.error("Banner image read failed:", err);
+          alert("Image processing failed: " + (err.message || err));
         }
       }
 
       const existingBanner = JSON.parse(localStorage.getItem('siteBanner')) || {};
       const bannerData = {
-        imageUrl: imageUrl || existingBanner.imageUrl || '',
+        imageUrl: imageData || existingBanner.imageUrl || '',
         title: title || existingBanner.title || '',
         subtitle: subtitle || existingBanner.subtitle || '',
         updatedAt: new Date().toISOString()
@@ -296,7 +299,7 @@
     document.getElementById('productForm').style.display = 'block';
   }
 
-  async function saveProduct() {
+  window.saveProduct = async function() {
     try {
       const editId = document.getElementById('editId').value;
       const name = document.getElementById('prodName').value.trim();
@@ -310,15 +313,18 @@
         return;
       }
 
-      let imageUrl = '';
+      let imageData = '';
       if (imageFile) {
         try {
-          const storageRef = firebase.storage().ref('products/' + Date.now() + '_' + imageFile.name);
-          await storageRef.put(imageFile);
-          imageUrl = await storageRef.getDownloadURL();
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(imageFile);
+          });
         } catch (err) {
-          console.error("Image upload failed:", err);
-          alert("Image upload failed: " + (err.message || err) + "\nProduct will be saved without image.");
+          console.error("Image read failed:", err);
+          alert("Image processing failed: " + (err.message || err));
         }
       }
 
@@ -338,7 +344,7 @@
           price,
           category,
           featured,
-          image: imageUrl || existingImage
+          image: imageData || existingImage
         };
       } else {
         const newId = products.length > 0 ? Math.max(...products.map(p => Number(p.id) || 0)) + 1 : 1;
@@ -348,7 +354,7 @@
           price,
           category,
           featured,
-          image: imageUrl
+          image: imageData
         });
       }
 
@@ -360,7 +366,7 @@
       console.error("Save product error:", err);
       alert("Error saving product: " + (err.message || err));
     }
-  }
+  };
 
   function cancelProduct() {
     document.getElementById('productForm').style.display = 'none';

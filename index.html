@@ -199,12 +199,19 @@
     const products = getProducts().filter(p => p.featured);
     const container = document.getElementById('featuredProducts');
     container.innerHTML = '';
+    if (!products.length) {
+      container.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;">No featured products yet.</p>';
+      return;
+    }
     products.forEach(p => {
+      const imgTag = p.image
+        ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`
+        : '';
       container.innerHTML += `
         <div class="product-card">
-          ${p.image ? `<img src="${p.image}" alt="${p.name}">` : ''}
+          ${imgTag}
           <h3>${p.name}</h3><p>₨${p.price}</p>
-          <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+          <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${p.price})">Add to Cart</button>
         </div>`;
     });
   }
