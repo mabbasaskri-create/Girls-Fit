@@ -69,6 +69,14 @@ function syncProductsFromFirebase() {
       if (typeof loadHandbags === 'function') loadHandbags();
       if (typeof loadPouches === 'function') loadPouches();
       if (typeof loadProducts === 'function') loadProducts();
+    } else {
+      // Firebase is empty, clear localStorage too
+      console.log('Firebase products empty, clearing localStorage');
+      localStorage.setItem('products', JSON.stringify([]));
+      if (typeof loadFeaturedProducts === 'function') loadFeaturedProducts();
+      if (typeof loadHandbags === 'function') loadHandbags();
+      if (typeof loadPouches === 'function') loadPouches();
+      if (typeof loadProducts === 'function') loadProducts();
     }
   }).catch(function(err) {
     console.error('Sync products error:', err);

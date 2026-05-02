@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
           var index = products.findIndex(function(p) { return String(p.id) === String(editId); });
           if (index === -1) { alert('Product not found!'); return; }
           var existingImages = products[index].images || (products[index].image ? [products[index].image] : []);
-          products[index] = {
+          var updatedProduct = {
             id: Number(editId),
             name: name,
             price: price,
@@ -289,9 +289,10 @@ document.addEventListener('DOMContentLoaded', function() {
             images: images.length > 0 ? images : existingImages,
             image: images.length > 0 ? images[0] : (existingImages[0] || '')
           };
+          products[index] = updatedProduct;
         } else {
           var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return Number(p.id) || 0; })) + 1 : 1;
-          products.push({
+          var newProduct = {
             id: newId,
             name: name,
             price: price,
@@ -300,13 +301,36 @@ document.addEventListener('DOMContentLoaded', function() {
             featured: featured,
             images: images,
             image: images.length > 0 ? images[0] : ''
-          });
+          };
+          products.push(newProduct);
         }
 
-        saveProducts(products);
-        alert('✅ Product saved successfully!');
-        cancelProduct();
-        loadProducts();
+        // Save to localStorage
+        localStorage.setItem('products', JSON.stringify(products));
+        
+        // Save to Firebase Realtime Database
+        if (window.firebaseDB) {
+          window.firebaseDB.ref('products').set(products)
+            .then(function() {
+              console.log('✅ Products synced to Firebase:', products.length, 'products');
+              alert('✅ Product saved & synced to all devices!');
+              cancelProduct();
+              loadProducts();
+              loadDashboard();
+            })
+            .catch(function(err) {
+              console.error('Firebase sync error:', err);
+              alert('Product saved locally, but Firebase sync failed: ' + (err.message || err));
+              cancelProduct();
+              loadProducts();
+              loadDashboard();
+            });
+        } else {
+          alert('✅ Product saved locally! (Firebase not connected)');
+          cancelProduct();
+          loadProducts();
+          loadDashboard();
+        }
       };
 
       // Process images
@@ -389,10 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
       alert('Firebase not initialized! Please refresh the page.');
       return;
     }
+    if (products.length === 0) {
+      if (!confirm('No products found locally. Do you want to clear Firebase too?')) return;
+    }
     window.firebaseDB.ref('products').set(products)
       .then(function() {
-        alert('✅ Products synced to Firebase successfully! All devices will now see these products.');
+        alert('✅ Products synced to Firebase successfully! All devices will now see ' + products.length + ' product(s).');
         console.log('Products synced:', products.length);
+        loadProducts();
+        loadDashboard();
       })
       .catch(function(err) {
         console.error('Sync error:', err);
