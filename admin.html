@@ -54,7 +54,10 @@
 <div id="admin-products" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
     <h2>📦 All Products</h2>
-    <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
+    <div>
+      <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 Sync to Firebase</button>
+      <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
+    </div>
   </div>
 
   <!-- Add/Edit Product Form -->
@@ -95,9 +98,16 @@
   </table>
 </div>
 
-<!-- Orders Management -->
+  // Orders Management -->
 <div id="admin-orders" class="admin-page" style="display:none;padding:40px 20px;max-width:1100px;margin:auto;">
-  <h2>📦 All Orders</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+    <h2>📦 All Products</h2>
+    <div>
+      <button onclick="clearAllProducts()" style="background:#f44336;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🗑️ Clear All Products</button>
+      <button onclick="syncProductsToFirebase()" style="background:#4CAF50;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 Sync to Firebase</button>
+      <button onclick="showAddProduct()" style="background:#ff8ab3;color:white;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:bold;">+ Add Product</button>
+    </div>
+  </div>
   <table>
     <thead>
       <tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Phone</th><th>Address</th><th>Product</th><th>Price</th><th>Status</th><th>Update Status</th></tr>
@@ -343,7 +353,72 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProducts();
   }
 
-  // Orders
+  // Clear all products
+  window.clearAllProducts = function() {
+    if (!confirm('⚠️ This will DELETE ALL PRODUCTS permanently!\n\nAre you sure you want to continue?')) return;
+    if (!confirm('🚨 Final warning: This cannot be undone!\n\nDelete ALL products?')) return;
+    
+    // Clear from localStorage
+    localStorage.setItem('products', JSON.stringify([]));
+    
+    // Clear from Firebase
+    if (window.firebaseDB) {
+      window.firebaseDB.ref('products').remove()
+        .then(function() {
+          alert('✅ All products cleared successfully!');
+          loadProducts();
+          loadDashboard();
+        })
+        .catch(function(err) {
+          console.error('Clear products error:', err);
+          alert('Products cleared from localStorage, but Firebase clear failed: ' + (err.message || err));
+          loadProducts();
+          loadDashboard();
+        });
+    } else {
+      alert('✅ All products cleared from localStorage!');
+      loadProducts();
+      loadDashboard();
+    }
+  }
+
+  // Sync products to Firebase manually
+  window.syncProductsToFirebase = function() {
+    var products = getProducts();
+    if (!window.firebaseDB) {
+      alert('Firebase not initialized! Please refresh the page.');
+      return;
+    }
+    window.firebaseDB.ref('products').set(products)
+      .then(function() {
+        alert('✅ Products synced to Firebase successfully! All devices will now see these products.');
+        console.log('Products synced:', products.length);
+      })
+      .catch(function(err) {
+        console.error('Sync error:', err);
+        alert('Sync failed: ' + (err.message || err));
+      });
+  }
+
+  // Sync orders to Firebase manually
+  window.syncOrdersToFirebase = function() {
+    var orders = getOrders();
+    if (!window.firebaseDB) {
+      alert('Firebase not initialized! Please refresh the page.');
+      return;
+    }
+    window.firebaseDB.ref('orders').set(orders)
+      .then(function() {
+        alert('✅ Orders synced to Firebase successfully!');
+        console.log('Orders synced:', orders.length);
+      })
+      .catch(function(err) {
+        console.error('Sync error:', err);
+        alert('Sync failed: ' + (err.message || err));
+      });
+  }
+
+  // Orders display functions...
   function loadOrders() {
     var orders = getOrders();
     var tbody = document.getElementById('ordersTableBody');
