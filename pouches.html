@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>💄 Makeup Pouches - Girls Fit</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -86,29 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-
-  window.signInWithGoogle = function() {
-    var provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then(function(result) {
-        var user = result.user;
-        window.currentFirebaseUser = user;
-        if (user.email === 'm.abbas.askri@gmail.com') {
-          window.location.href = 'admin.html';
-        } else {
-          window.location.href = 'pouches.html';
-        }
-      })
-      .catch(function(error) {
-        console.error("Google sign-in error:", error);
-      });
-  };
-
-  window.logoutUser = function() {
-    firebase.auth().signOut().then(function() {
-      window.location.href = "login.html";
-    });
-  };
 
   window.addToCart = function(name, price) {
     var user = window.currentFirebaseUser;
